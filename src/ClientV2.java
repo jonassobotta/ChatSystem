@@ -13,7 +13,7 @@ public class ClientV2 {
         messageRequired,
     }
 
-    int[] serverPorts = {7777, 8888};
+    int[] serverPorts = {7777, 7777};
     private final String serverAdress = "127.0.0.1";
     private state clientState;
     private BufferedReader reader;
@@ -22,6 +22,7 @@ public class ClientV2 {
     private String username;
     private String token;
     private String receiver;
+    private static int listenPort;
 
     public static void main(String[] args) {
         ClientV2 halloo = new ClientV2();
@@ -32,7 +33,7 @@ public class ClientV2 {
         try {
             this.clientState = state.none;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
-            this.serverSocket = new ServerSocket(9999);
+            this.listenPort = -1;
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -68,7 +69,7 @@ public class ClientV2 {
                         System.out.print("enter message: ");
                     } else if (clientState == state.messageRequired) {
                         clientState = state.messageRequired;
-                        //sendMessage(readerText);
+                        sendMessage(new Message(username, token, receiver, readerText));
                         System.out.print("enter message: ");
                     }
 
@@ -81,22 +82,31 @@ public class ClientV2 {
 
     class Writer extends Thread {
         public void run() {
+            System.out.println("Writer running");
             try {
-                Socket clientSocket = serverSocket.accept();
-                // Get input and output streams to communicate with the client
-                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-                Message message = (Message) in.readObject();
+                //was da loooos
+                while (listenPort == -1) {
+                    sleep(1);
+                }
+                serverSocket = new ServerSocket(listenPort);
+                System.out.println("Listenserver created");
+                while (true) {
+                    Socket clientSocket = serverSocket.accept();
+                    // Get input and output streams to communicate with the client
+                    ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                    ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                    Message message = (Message) in.readObject();
 
-                addMessageToHistory(message);
+                    addMessageToHistory(message);
 
-                in.close();
-                out.close();
-                clientSocket.close();
+                    in.close();
+                    out.close();
+                    clientSocket.close();
+
+                }
             } catch (Exception e) {
 
             }
-
         }
     }
 
@@ -109,13 +119,14 @@ public class ClientV2 {
 
     }
 
-    private boolean checkUserData () throws IOException, ClassNotFoundException {
+    private boolean checkUserData() throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
         Message answer = sendMessage(new Message(username, token, "GET"));
-        if(answer.getStatus().equals("OK")){
+        if (answer.getStatus().equals("OK")) {
             //add history
+            listenPort = answer.getPort();
             return true;
-        }else {
+        } else {
             return false;
         }
     }
@@ -125,7 +136,8 @@ public class ClientV2 {
         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
         ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
         out.writeObject(message);
-        return (Message) in.readObject();
+        Message answer = (Message) in.readObject();
+        return answer;
     }
 
     private static int randomNumber() {

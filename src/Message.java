@@ -9,22 +9,25 @@ public class Message  implements Serializable {
     private String messageText;
     private String token;
     private String status;
-    private Timestamp timestamp;
+    private long timestamp;
     private ArrayList<Message> msgList;
+
+    private int port;
 
     //first client msg for login
     public Message(String sender, String token, String status) {
         this.sender = sender;
         this.status = status;
         this.token = token;
-        this.timestamp = new Timestamp(System.currentTimeMillis());
+        this.timestamp = System.currentTimeMillis();
     }
 
     //first server answer
-    public Message(ArrayList<Message> msgList, String status) {
+    public Message(ArrayList<Message> msgList, String status, int port) {
         this.msgList = msgList;
         this.status = status;
-        this.timestamp = new Timestamp(System.currentTimeMillis());
+        this.port = port;
+        this.timestamp = System.currentTimeMillis();
     }
     //normal chat msg
     public Message(String sender, String token, String reciver, String messageText) {
@@ -33,18 +36,18 @@ public class Message  implements Serializable {
         this.reciver = reciver;
         this.messageText = messageText;
         this.status = "SEND";
-        this.timestamp = new Timestamp(System.currentTimeMillis());
+        this.timestamp = System.currentTimeMillis();
     }
     public Message(String status) {
         this.status = status;
-        this.timestamp = new Timestamp(System.currentTimeMillis());
+        this.timestamp = System.currentTimeMillis();
     }
 
     public ArrayList<Message> getMsgList(){
         return this.msgList;
     }
 
-    public Timestamp getTimestamp(){
+    public long getTimestamp(){
         return this.timestamp;
     }
 
@@ -52,6 +55,9 @@ public class Message  implements Serializable {
         return this.status;
     }
 
+    public int getPort(){
+        return this.port;
+    }
     public String getToken() {
         return token;
     }

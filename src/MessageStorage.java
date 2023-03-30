@@ -68,9 +68,9 @@ public class MessageStorage {
         }
     }
 
-    private static class UniqueTimestamp implements Comparable<UniqueTimestamp> {
-        private String user;
-        private long timestamp;
+    public static class UniqueTimestamp implements Comparable<UniqueTimestamp> {
+        public String user;
+        public long timestamp;
 
         public UniqueTimestamp(String user, long timestamp) {
             this.user = user;
@@ -87,7 +87,7 @@ public class MessageStorage {
         }
     }
 
-    private static class Message {
+    public static class Message {
         private String sender;
         private String messageText;
 

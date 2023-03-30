@@ -9,7 +9,7 @@ public class Client {
     public static void main(String[] args) throws Exception {
         // Set the IP address and port number of the server
         String serverAddress = "127.0.0.1"; // Replace with your server IP address
-        int[] serverPorts = {7777, 8888};
+        int[] serverPorts = {7777, 7777};
         boolean firstMessage = true;
         boolean reciverSelected = false;
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
