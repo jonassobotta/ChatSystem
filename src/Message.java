@@ -1,6 +1,6 @@
 import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 public class Message  implements Serializable {
 
@@ -10,8 +10,7 @@ public class Message  implements Serializable {
     private String token;
     private String status;
     private long timestamp;
-    private ArrayList<Message> msgList;
-
+    private TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> msgList;
     private int port;
 
     //first client msg for login
@@ -23,7 +22,7 @@ public class Message  implements Serializable {
     }
 
     //first server answer
-    public Message(ArrayList<Message> msgList, String status, int port) {
+    public Message(TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> msgList, String status, int port) {
         this.msgList = msgList;
         this.status = status;
         this.port = port;
@@ -43,7 +42,7 @@ public class Message  implements Serializable {
         this.timestamp = System.currentTimeMillis();
     }
 
-    public ArrayList<Message> getMsgList(){
+    public TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> getMsgList(){
         return this.msgList;
     }
 

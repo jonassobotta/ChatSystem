@@ -40,7 +40,7 @@ public class Client {
                 if (ansMessage.getStatus().equals("OK")) {
                     System.out.println("login successful");
                     firstMessage = false;
-                    msgList = ansMessage.getMsgList();
+                    //msgList = ansMessage.getMsgList();
                 } else {
                     System.out.println("login unsuccessful");
                 }
@@ -115,5 +115,14 @@ public class Client {
             e.printStackTrace();
             return null;
         }
+    }
+    class MessageList{
+        TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> msgList;
+        public MessageList(TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> msgList){
+            this.msgList = msgList;
+        }
+        public void print(){
+
+        };
     }
 }

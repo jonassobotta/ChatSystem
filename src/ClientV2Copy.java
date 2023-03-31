@@ -3,10 +3,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import java.util.Random;
 
-public class ClientV2 {
+public class ClientV2Copy {
     public enum state {
         none,
         passwordRequired,
@@ -30,9 +29,9 @@ public class ClientV2 {
         halloo.start();
     }
 
-    public ClientV2() {
+    public ClientV2Copy() {
         try {
-            this.clientState = state.none;
+            this.clientState = state.none;-
             this.reader = new BufferedReader(new InputStreamReader(System.in));
             this.listenPort = -1;
         } catch (Exception e) {
@@ -89,8 +88,8 @@ public class ClientV2 {
                 while (listenPort == -1) {
                     sleep(1);
                 }
-                ServerSocket serverSocket = new ServerSocket(listenPort);
-                System.out.println("Listenserver created with port " + serverSocket.getLocalPort());
+                serverSocket = new ServerSocket(listenPort);
+                System.out.println("Listenserver created with address " + serverSocket.getInetAddress().toString().substring(1) +":"+serverSocket.getLocalPort());
                 while (true) {
                     Socket clientSocket = serverSocket.accept();
                     // Get input and output streams to communicate with the client
@@ -117,7 +116,7 @@ public class ClientV2 {
     }
 
     private void addMessageToHistory(Message message) {
-        System.out.println(message.getSender() + ": " + message.getMessageText());
+        System.out.println(message.getMessageText());
     }
 
     private boolean checkUserData() throws IOException, ClassNotFoundException {
@@ -126,13 +125,6 @@ public class ClientV2 {
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
-            System.out.println("History: " + answer.getMsgList().size());
-            for (Map.Entry<MessageStorage.UniqueTimestamp, MessageStorage.Message> entry : answer.getMsgList().entrySet()) {
-                MessageStorage.UniqueTimestamp uniqueTimestamp = entry.getKey();
-                MessageStorage.Message message = entry.getValue();
-                System.out.println(uniqueTimestamp.timestamp + " - " + uniqueTimestamp.user + ": " + message.getMessageText());
-            }
-
             return true;
         } else {
             return false;

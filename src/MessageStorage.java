@@ -29,7 +29,19 @@ public class MessageStorage {
     public MessageStorage() {
         storage = new TreeMap<>();
     }
-
+    public TreeMap<UniqueTimestamp, Message> getMessagesPerUser(String user) {
+        TreeMap<UniqueTimestamp, Message> result = new TreeMap<>();
+        for (Map.Entry<String, Chat> entry : storage.entrySet()) {
+            String userCombination = entry.getKey();
+            if (userCombination.contains(user)){
+                Chat chat = entry.getValue();
+                for (Map.Entry<UniqueTimestamp, Message> message : chat.getMessages().entrySet()) {
+                    result.put(message.getKey(),message.getValue());
+                }
+            }
+        }
+        return result;
+    }
     public void addMessage(String sender, String recipient, String messageText, long timestamp) {
         String userCombination = getUserCombinationKey(sender, recipient);
         Chat chat = storage.getOrDefault(userCombination, new Chat());
@@ -38,6 +50,7 @@ public class MessageStorage {
     }
 
     public TreeMap<UniqueTimestamp, Message> getMessages(String userOne, String userTwo) {
+        System.out.println(userOne + userTwo);
         String userCombination = getUserCombinationKey(userOne, userTwo);
         Chat chat = storage.get(userCombination);
         if (chat == null) {
