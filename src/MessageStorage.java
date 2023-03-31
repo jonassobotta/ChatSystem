@@ -1,56 +1,52 @@
+import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class MessageStorage {
-    public static void main(String[] args) {
-        MessageStorage myStorage = new MessageStorage();
-        myStorage.addMessage("joel", "nico", "hallo", System.nanoTime());
-        myStorage.addMessage("nico", "joel", "hallo du opfer", System.nanoTime());
-        myStorage.addMessage("luca", "joel", "hallo du opfer", System.nanoTime());
-        myStorage.addMessage("joel", "luca", "hallo", System.nanoTime());
-
-        TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> myMap = myStorage.getMessages("joel", "nico");
-        System.out.println(myMap.size());
-        if (myMap != null) {
-            for (Map.Entry<MessageStorage.UniqueTimestamp, MessageStorage.Message> entry : myMap.entrySet()) {
-                MessageStorage.UniqueTimestamp uniqueTimestamp = entry.getKey();
-                MessageStorage.Message message = entry.getValue();
-                System.out.println(uniqueTimestamp.timestamp + " - " + uniqueTimestamp.user + ": " + message.getMessageText());
-            }
-        } else {
-            System.out.println("No messages found");
-        }
-
-    }
+public class MessageStorage implements Serializable{
 
     private Map<String, Chat> storage;
+    private ArrayList<String> userList;
 
     public MessageStorage() {
         storage = new TreeMap<>();
+        userList = new ArrayList<>();
     }
-    public TreeMap<UniqueTimestamp, Message> getMessagesPerUser(String user) {
-        TreeMap<UniqueTimestamp, Message> result = new TreeMap<>();
+
+    public ArrayList<Chat> getChatsForUser(String user) {
+        ArrayList<Chat> result = new ArrayList<>();
+
         for (Map.Entry<String, Chat> entry : storage.entrySet()) {
             String userCombination = entry.getKey();
-            if (userCombination.contains(user)){
-                Chat chat = entry.getValue();
-                for (Map.Entry<UniqueTimestamp, Message> message : chat.getMessages().entrySet()) {
-                    result.put(message.getKey(),message.getValue());
-                }
+            Chat chat = entry.getValue();
+
+            String[] users = userCombination.split(":");
+            if (users.length != 2) {
+                continue;
+            }
+
+            if (users[0].equals(user) || users[1].equals(user)) {
+                result.add(chat);
             }
         }
+
         return result;
     }
-    public void addMessage(String sender, String recipient, String messageText, long timestamp) {
-        String userCombination = getUserCombinationKey(sender, recipient);
+
+
+
+    public void addMessage(Message message) {
+        String userCombination = getUserCombinationKey(message.getSender(), message.getReciver());
         Chat chat = storage.getOrDefault(userCombination, new Chat());
-        chat.addMessage(sender, messageText, timestamp);
+        chat.addMessage(message);
         storage.put(userCombination, chat);
+
+        if (userList.contains(message.getSender()) == false) userList.add(message.getSender());
+        if (userList.contains(message.getReciver()) == false) userList.add(message.getReciver());
     }
 
     public TreeMap<UniqueTimestamp, Message> getMessages(String userOne, String userTwo) {
-        System.out.println(userOne + userTwo);
         String userCombination = getUserCombinationKey(userOne, userTwo);
         Chat chat = storage.get(userCombination);
         if (chat == null) {
@@ -63,16 +59,15 @@ public class MessageStorage {
         return userOne.compareTo(userTwo) < 0 ? userOne + ":" + userTwo : userTwo + ":" + userOne;
     }
 
-    private class Chat {
+    public class Chat implements Serializable {
         private TreeMap<UniqueTimestamp, Message> chat;
 
         public Chat() {
             chat = new TreeMap<>();
         }
 
-        public void addMessage(String sender, String messageText, long timestamp) {
-            UniqueTimestamp uniqueTimestamp = new UniqueTimestamp(sender, timestamp);
-            Message message = new Message(sender, messageText);
+        public void addMessage(Message message) {
+            UniqueTimestamp uniqueTimestamp = new UniqueTimestamp(message.getSender(), message.getTimestamp());
             chat.put(uniqueTimestamp, message);
         }
 
@@ -80,42 +75,6 @@ public class MessageStorage {
             return chat;
         }
     }
-
-    public static class UniqueTimestamp implements Comparable<UniqueTimestamp> {
-        public String user;
-        public long timestamp;
-
-        public UniqueTimestamp(String user, long timestamp) {
-            this.user = user;
-            this.timestamp = timestamp;
-        }
-
-        @Override
-        public int compareTo(UniqueTimestamp o) {
-            int compare = user.compareTo(o.user);
-            if (compare == 0) {
-                compare = Long.compare(timestamp, o.timestamp);
-            }
-            return compare;
-        }
-    }
-
-    public static class Message {
-        private String sender;
-        private String messageText;
-
-        public Message(String sender, String messageText) {
-            this.sender = sender;
-            this.messageText = messageText;
-        }
-
-        public String getSender() {
-            return sender;
-        }
-
-        public String getMessageText() {
-            return messageText;
-        }
-    }
-
 }
+
+// Empty message

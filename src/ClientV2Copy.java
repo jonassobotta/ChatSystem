@@ -3,6 +3,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.Random;
 
 public class ClientV2Copy {
@@ -31,7 +32,7 @@ public class ClientV2Copy {
 
     public ClientV2Copy() {
         try {
-            this.clientState = state.none;-
+            this.clientState = state.none;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
             this.listenPort = -1;
         } catch (Exception e) {
@@ -88,8 +89,8 @@ public class ClientV2Copy {
                 while (listenPort == -1) {
                     sleep(1);
                 }
-                serverSocket = new ServerSocket(listenPort);
-                System.out.println("Listenserver created with address " + serverSocket.getInetAddress().toString().substring(1) +":"+serverSocket.getLocalPort());
+                ServerSocket serverSocket = new ServerSocket(listenPort);
+                System.out.println("Listenserver created with port " + serverSocket.getLocalPort());
                 while (true) {
                     Socket clientSocket = serverSocket.accept();
                     // Get input and output streams to communicate with the client
@@ -116,7 +117,7 @@ public class ClientV2Copy {
     }
 
     private void addMessageToHistory(Message message) {
-        System.out.println(message.getMessageText());
+        System.out.println(message.getSender() + ": " + message.getMessageText());
     }
 
     private boolean checkUserData() throws IOException, ClassNotFoundException {
@@ -125,6 +126,11 @@ public class ClientV2Copy {
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
+
+            for (MessageStorage.Chat chat : answer.getMsgList()){
+                Server.printTreeMap(chat.getMessages());
+            }
+
             return true;
         } else {
             return false;

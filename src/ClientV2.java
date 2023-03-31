@@ -126,11 +126,9 @@ public class ClientV2 {
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
-            System.out.println("History: " + answer.getMsgList().size());
-            for (Map.Entry<MessageStorage.UniqueTimestamp, MessageStorage.Message> entry : answer.getMsgList().entrySet()) {
-                MessageStorage.UniqueTimestamp uniqueTimestamp = entry.getKey();
-                MessageStorage.Message message = entry.getValue();
-                System.out.println(uniqueTimestamp.timestamp + " - " + uniqueTimestamp.user + ": " + message.getMessageText());
+
+            for (MessageStorage.Chat chat : answer.getMsgList()){
+                Server.printTreeMap(chat.getMessages());
             }
 
             return true;

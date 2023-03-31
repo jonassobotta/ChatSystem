@@ -61,10 +61,14 @@ public class Server extends Thread {
                             userPortStorage.addUser(message.getSender(), clientSocket.getInetAddress(), assignedPort);
                         }
                         if (message.getStatus().equals("GET")) {
-                            out.writeObject(new Message(getRelevantMessages(message), "OK", userPortStorage.getUser(message.getSender()).getPort()));
+                            ArrayList<MessageStorage.Chat> relevantMsg = getRelevantMessages(message);
+
+                            Message myMsg = new Message(relevantMsg, "OK", userPortStorage.getUser(message.getSender()).getPort());
+
+                            out.writeObject(myMsg);
                             System.out.println("sent message history of user " + message.getSender());
                         } else if (message.getStatus().equals("SEND")) {
-                            messageStorage.addMessage(message.getSender(), message.getReciver(), message.getMessageText(), message.getTimestamp());
+                            messageStorage.addMessage(message);
                             //msg forwarding
                             sendMessageToReceiver(message);
                             printMap(messageStorage);
@@ -87,18 +91,12 @@ public class Server extends Thread {
                 System.out.println("Client disconnected");
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
-    private TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> getRelevantMessages(Message message) {
-        System.out.println("History " + messageStorage.getMessagesPerUser(message.getSender()).size());
-        for (Map.Entry<MessageStorage.UniqueTimestamp, MessageStorage.Message> entry : messageStorage.getMessagesPerUser(message.getSender()).entrySet()) {
-            MessageStorage.UniqueTimestamp uniqueTimestamp = entry.getKey();
-            MessageStorage.Message messaget = entry.getValue();
-            System.out.println(uniqueTimestamp.timestamp + " - " + uniqueTimestamp.user + ": " + messaget.getMessageText());
-        }
-        return messageStorage.getMessagesPerUser(message.getSender());
+    private  ArrayList<MessageStorage.Chat> getRelevantMessages(Message message) {
+        return messageStorage.getChatsForUser(message.getSender());
     }
 
     //geht net
@@ -121,13 +119,25 @@ public class Server extends Thread {
             System.out.println("send to reciever error: " + e.getMessage());
         }
     }
+    public static void printTreeMap(TreeMap<UniqueTimestamp, Message> map) {
+        if (map == null) {
+            System.out.println("Map is null");
+            return;
+        }
+        System.out.println("Size of map: " + map.size());
+        for (Map.Entry<UniqueTimestamp, Message> entry : map.entrySet()) {
+            UniqueTimestamp uniqueTimestamp = entry.getKey();
+            Message message = entry.getValue();
+            System.out.println(uniqueTimestamp.timestamp + " - " + uniqueTimestamp.user + ": " + message.getMessageText());
+        }
+    }
 
-    public void printMap(MessageStorage myStorage) {
-        TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> myMap = myStorage.getMessages("joel", "nico");
+    public static void printMap(MessageStorage myStorage) {
+        TreeMap<UniqueTimestamp, Message> myMap = myStorage.getMessages("joel", "nico");
         if (myMap != null) {
-            for (Map.Entry<MessageStorage.UniqueTimestamp, MessageStorage.Message> entry : myMap.entrySet()) {
-                MessageStorage.UniqueTimestamp uniqueTimestamp = entry.getKey();
-                MessageStorage.Message message = entry.getValue();
+            for (Map.Entry<UniqueTimestamp, Message> entry : myMap.entrySet()) {
+                UniqueTimestamp uniqueTimestamp = entry.getKey();
+                Message message = entry.getValue();
                 System.out.println(uniqueTimestamp.timestamp + " - " + uniqueTimestamp.user + ": " + message.getMessageText());
             }
         } else {

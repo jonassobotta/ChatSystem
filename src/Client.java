@@ -116,13 +116,4 @@ public class Client {
             return null;
         }
     }
-    class MessageList{
-        TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> msgList;
-        public MessageList(TreeMap<MessageStorage.UniqueTimestamp, MessageStorage.Message> msgList){
-            this.msgList = msgList;
-        }
-        public void print(){
-
-        };
-    }
 }
