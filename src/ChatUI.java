@@ -11,6 +11,7 @@ import java.util.TreeMap;
 
 public class ChatUI extends JFrame {
     private JPanel panelCards;
+    private JPanel headerPanel;
     private JPanel panelLogin;
     private JPanel panelChatList;
     private JPanel panelChatView;
@@ -25,10 +26,8 @@ public class ChatUI extends JFrame {
         // Set the size and title of the JFrame
         setSize(400, 300);
         setTitle("Chat Application");
-        chats = new ArrayList<>();
-        chats.add("Alice");
-        chats.add("Bob");
-        chats.add("luca");
+        chats = clientLogic.getAllChatPartners(username);
+
         chatList = new JList<>(chats.toArray(new String[0]));
 
         // Create the login panel
@@ -86,21 +85,25 @@ public class ChatUI extends JFrame {
 
         // Create the chat view panel
         panelChatView = new JPanel(new BorderLayout());
+        headerPanel = new JPanel(new BorderLayout());
         JLabel labelChatView = new JLabel("Chat View");
-        panelChatView.add(labelChatView, BorderLayout.NORTH);
+        JButton buttonBack = new JButton("Back");
+        headerPanel.add(buttonBack, BorderLayout.WEST);
+        headerPanel.add(labelChatView, BorderLayout.CENTER);
+        panelChatView.add(headerPanel, BorderLayout.NORTH);
+
         JTextArea chatTextArea = new JTextArea();
         JScrollPane chatScrollPane = new JScrollPane(chatTextArea);
         panelChatView.add(chatScrollPane, BorderLayout.CENTER);
-        JButton buttonBack = new JButton("Back");
-        panelChatView.add(buttonBack, BorderLayout.SOUTH);
 
-        // Create the message input panel
+// Create the message input panel
         JPanel messageInputPanel = new JPanel(new BorderLayout());
         JTextField messageInputField = new JTextField();
         messageInputPanel.add(messageInputField, BorderLayout.CENTER);
         JButton buttonSend = new JButton("Send");
         messageInputPanel.add(buttonSend, BorderLayout.EAST);
         panelChatView.add(messageInputPanel, BorderLayout.SOUTH);
+
 
 // Add action listener to the send button
         buttonSend.addActionListener(new ActionListener() {
@@ -179,7 +182,7 @@ public class ChatUI extends JFrame {
         clientLogic.setReceiver(chatPartner);
         System.out.println(chatPartner);
         // Set the chat view panel title
-        JLabel labelChatView = (JLabel) panelChatView.getComponent(0);
+        JLabel labelChatView = (JLabel) headerPanel.getComponent(1);
         labelChatView.setText("Chat View: " + chatPartner);
         currentChatPartner = chatPartner;
 

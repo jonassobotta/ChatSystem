@@ -1,8 +1,10 @@
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeMap;
 
@@ -46,6 +48,9 @@ public class ClientLogic {
     }
     public void setReceiver(String receiver){
         this.receiver = receiver;
+    }
+    public ArrayList<String> getAllChatPartners(String username){
+        return this.messageStorage.getChatPartnersForUser(username);
     }
     class Writer extends Thread {
         public void run() {

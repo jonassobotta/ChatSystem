@@ -93,7 +93,21 @@ public class MessageStorage implements Serializable{
         }
         System.out.println("=======================");
     }
-
+    public ArrayList<String> getChatPartnersForUser(String username) {
+        ArrayList<String> chatPartners = new ArrayList<>();
+        for (String key : storage.keySet()) {
+            String[] users = key.split(":");
+            if (users.length != 2) {
+                continue;
+            }
+            if (users[0].equals(username)) {
+                chatPartners.add(users[1]);
+            } else if (users[1].equals(username)) {
+                chatPartners.add(users[0]);
+            }
+        }
+        return chatPartners;
+    }
 }
 
 // Empty message
