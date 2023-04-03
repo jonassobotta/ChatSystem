@@ -2,7 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ChatUI extends JFrame {
     private JPanel panelCards;
@@ -11,15 +16,19 @@ public class ChatUI extends JFrame {
     private JPanel panelChatView;
     private ArrayList<String> chats;
     private JList<String> chatList;
-
+    private ClientLogic clientLogic;
+    private String currentChatPartner;
 
     public ChatUI() {
+        clientLogic = new ClientLogic(this);
+        clientLogic.start();
         // Set the size and title of the JFrame
         setSize(400, 300);
         setTitle("Chat Application");
         chats = new ArrayList<>();
         chats.add("Alice");
         chats.add("Bob");
+        chats.add("luca");
         chatList = new JList<>(chats.toArray(new String[0]));
 
         // Create the login panel
@@ -41,11 +50,7 @@ public class ChatUI extends JFrame {
         panelChatList = new JPanel(new BorderLayout());
         JLabel labelChatList = new JLabel("Chat List");
         panelChatList.add(labelChatList, BorderLayout.NORTH);
-        DefaultListModel<String> chatListModel = new DefaultListModel<>();
-        chatListModel.addElement("Chat 1");
-        chatListModel.addElement("Chat 2");
-        chatListModel.addElement("Chat 3");
-        JList<String> chatList = new JList<>(chatListModel);
+
         JScrollPane chatListScrollPane = new JScrollPane(chatList);
         panelChatList.add(chatListScrollPane, BorderLayout.CENTER);
         JButton buttonAddChat = new JButton("Add Chat");
@@ -70,6 +75,14 @@ public class ChatUI extends JFrame {
             }
         });
         panelChatList.add(buttonAddChat, BorderLayout.SOUTH);
+        chatList.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    String selectedChat = chatList.getSelectedValue();
+                    openChat(selectedChat);
+                }
+            }
+        });
 
         // Create the chat view panel
         panelChatView = new JPanel(new BorderLayout());
@@ -81,6 +94,31 @@ public class ChatUI extends JFrame {
         JButton buttonBack = new JButton("Back");
         panelChatView.add(buttonBack, BorderLayout.SOUTH);
 
+        // Create the message input panel
+        JPanel messageInputPanel = new JPanel(new BorderLayout());
+        JTextField messageInputField = new JTextField();
+        messageInputPanel.add(messageInputField, BorderLayout.CENTER);
+        JButton buttonSend = new JButton("Send");
+        messageInputPanel.add(buttonSend, BorderLayout.EAST);
+        panelChatView.add(messageInputPanel, BorderLayout.SOUTH);
+
+// Add action listener to the send button
+        buttonSend.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String message = messageInputField.getText();
+                System.out.println("Message: " + message);
+                messageInputField.setText("");
+                try {
+                    clientLogic.sendMessage(message);
+                } catch (Exception error){
+                    System.out.println(error.getMessage());
+                }
+
+            }
+        });
+
+
         // Create a CardLayout to switch between the panels
         panelCards = new JPanel(new CardLayout());
         panelCards.add(panelLogin, "Login");
@@ -91,18 +129,29 @@ public class ChatUI extends JFrame {
         buttonLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                String username = usernameField.getText();
+                String password = new String(passwordField.getPassword());
+                System.out.println("Username: " + username);
+                clientLogic.setUsername(username);
+                System.out.println("Password: " + password);
+                clientLogic.setPassword(password);
+                try {
+                    if (clientLogic.checkUserData()) {
+                        //weiter
+                        CardLayout cl = (CardLayout) panelCards.getLayout();
+                        cl.show(panelCards, "ChatList");
+                    } else {
+                        //zurück
+                        showInvalidPasswordPopup();
+                    }
+
+                } catch (Exception error) {
+                    System.out.println(error.getMessage());
+                }
                 // TODO: Perform login validation
-                CardLayout cl = (CardLayout) panelCards.getLayout();
-                cl.show(panelCards, "ChatList");
             }
         });
 
-        buttonAddChat.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO: Implement chat creation
-            }
-        });
 
         buttonBack.addActionListener(new ActionListener() {
             @Override
@@ -118,6 +167,45 @@ public class ChatUI extends JFrame {
         // Show the JFrame
         setVisible(true);
     }
+
+    private String username = "joel";
+
+    private void showInvalidPasswordPopup() {
+        JOptionPane.showMessageDialog(this, "Invalid password. Please try again.", "Login Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void openChat(String chatPartner) {
+
+        clientLogic.setReceiver(chatPartner);
+        System.out.println(chatPartner);
+        // Set the chat view panel title
+        JLabel labelChatView = (JLabel) panelChatView.getComponent(0);
+        labelChatView.setText("Chat View: " + chatPartner);
+        currentChatPartner = chatPartner;
+
+        // Initialize the chat view panel
+        initializeChatView();
+
+        // Show the chat view panel
+        CardLayout cl = (CardLayout) panelCards.getLayout();
+        cl.show(panelCards, "ChatView");
+    }
+
+    public void initializeChatView() {
+        TreeMap<UniqueTimestamp, Message> messages = clientLogic.printHistoryOfChat(currentChatPartner);
+        JTextArea chatTextArea = (JTextArea) ((JScrollPane) panelChatView.getComponent(1)).getViewport().getView();
+        chatTextArea.setText("");
+        if (messages != null) {
+            for (Map.Entry<UniqueTimestamp, Message> entry : messages.entrySet()) {
+                Message message = entry.getValue();
+                String sender = message.getSender();
+                String messageText = message.getMessageText();
+                chatTextArea.append(sender + ": " + messageText + "\n");
+                System.out.println(messageText);
+            }
+        }
+    }
+
 
     public static void main(String[] args) {
         new ChatUI();

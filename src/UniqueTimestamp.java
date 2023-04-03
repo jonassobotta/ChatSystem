@@ -1,6 +1,6 @@
 import java.io.Serializable;
 
-public class UniqueTimestamp implements Comparable<UniqueTimestamp> , Serializable {
+public class UniqueTimestamp implements Comparable<UniqueTimestamp>, Serializable {
     public String user;
     public long timestamp;
 
@@ -11,9 +11,10 @@ public class UniqueTimestamp implements Comparable<UniqueTimestamp> , Serializab
 
     @Override
     public int compareTo(UniqueTimestamp o) {
-        int compare = user.compareTo(o.user);
+        int compare = Long.compare(timestamp, o.timestamp);
+
         if (compare == 0) {
-            compare = Long.compare(timestamp, o.timestamp);
+            compare = user.compareTo(o.user);
         }
         return compare;
     }

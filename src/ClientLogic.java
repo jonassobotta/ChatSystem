@@ -3,11 +3,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeMap;
 
-public class ClientV2 {
+public class ClientLogic {
     public enum state {
         none,
         passwordRequired,
@@ -26,14 +25,12 @@ public class ClientV2 {
     private String receiver;
     private static int listenPort;
     private MessageStorage messageStorage;
+    private ChatUI chatUI;
 
-    public static void main(String[] args) {
-        ClientV2 halloo = new ClientV2();
-        halloo.start();
-    }
 
-    public ClientV2() {
+    public ClientLogic(ChatUI chatUI) {
         try {
+            this.chatUI = chatUI;
             this.clientState = state.none;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
             this.listenPort = -1;
@@ -46,6 +43,9 @@ public class ClientV2 {
     }
     public void setPassword(String password){
         this.token = generateToken(password);
+    }
+    public void setReceiver(String receiver){
+        this.receiver = receiver;
     }
     class Writer extends Thread {
         public void run() {
@@ -78,7 +78,7 @@ public class ClientV2 {
                         System.out.print("enter message: ");
                     } else if (clientState == state.messageRequired) {
                         clientState = state.messageRequired;
-                        sendMessage(new Message(username, token, receiver, readerText));
+                        sendMessage(readerText);
                         System.out.print("enter message: ");
                     }
 
@@ -130,12 +130,14 @@ public class ClientV2 {
     }
 
     public void addMessageToHistory(Message message) {
+        this.messageStorage.addMessage(message);
+        chatUI.initializeChatView();
         System.out.println(message.getSender() + ": " + message.getMessageText());
     }
 
     public boolean checkUserData() throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
-        Message answer = sendMessage(new Message(username, token, "GET"));
+        Message answer = sendMessage2(new Message(username, token, "GET"));
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
@@ -146,7 +148,14 @@ public class ClientV2 {
         }
     }
 
-    public Message sendMessage(Message message) throws IOException, ClassNotFoundException {
+    public Message sendMessage(String messageText) throws IOException, ClassNotFoundException {
+        Message message = new Message(username, token, receiver, messageText);
+        return sendMessage2(message);
+    }
+    public Message sendMessage2(Message message) throws IOException, ClassNotFoundException {
+        if(message.getStatus().equals("SEND")){
+            addMessageToHistory(message);
+        }
         socket = new Socket(serverAdress, serverPorts[randomNumber()]);
         ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
         ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
