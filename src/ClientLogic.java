@@ -36,6 +36,7 @@ public class ClientLogic {
             this.clientState = state.none;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
             this.listenPort = -1;
+            this.messageStorage = new MessageStorage();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -95,7 +96,7 @@ public class ClientLogic {
     }
 
     public TreeMap<UniqueTimestamp, Message> printHistoryOfChat(String receiver) {
-        Server.printTreeMap(messageStorage.getMessages(username, receiver));
+        //Server.printTreeMap(messageStorage.getMessages(username, receiver));
         return messageStorage.getMessages(username, receiver);
     }
 
@@ -115,8 +116,10 @@ public class ClientLogic {
                     ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
                     ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
                     Message message = (Message) in.readObject();
-
+                    System.out.println("druber");
                     addMessageToHistory(message);
+                    System.out.println("skjdfhdjk");
+                    chatUI.updateChatList();
 
                     in.close();
                     out.close();

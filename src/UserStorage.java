@@ -18,6 +18,7 @@ public class UserStorage {
         map.remove(username);
     }
 
+    //TODO: abfragen nach inet und user damit multiple device für einen nutzer möglich
     public boolean containsUser(String username) {
         return map.containsKey(username);
     }

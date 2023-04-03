@@ -26,7 +26,7 @@ public class ChatUI extends JFrame {
         // Set the size and title of the JFrame
         setSize(400, 300);
         setTitle("Chat Application");
-        chats = clientLogic.getAllChatPartners(username);
+        chats = new ArrayList<>();
 
         chatList = new JList<>(chats.toArray(new String[0]));
 
@@ -141,6 +141,8 @@ public class ChatUI extends JFrame {
                 try {
                     if (clientLogic.checkUserData()) {
                         //weiter
+                        chats = clientLogic.getAllChatPartners(username);
+                        chatList.setListData(chats.toArray(new String[0]));
                         CardLayout cl = (CardLayout) panelCards.getLayout();
                         cl.show(panelCards, "ChatList");
                     } else {
@@ -176,7 +178,10 @@ public class ChatUI extends JFrame {
     private void showInvalidPasswordPopup() {
         JOptionPane.showMessageDialog(this, "Invalid password. Please try again.", "Login Error", JOptionPane.ERROR_MESSAGE);
     }
-
+    public void updateChatList(){
+        chats = clientLogic.getAllChatPartners(username);
+        chatList.setListData(chats.toArray(new String[0]));
+    }
     private void openChat(String chatPartner) {
 
         clientLogic.setReceiver(chatPartner);
@@ -195,16 +200,18 @@ public class ChatUI extends JFrame {
     }
 
     public void initializeChatView() {
-        TreeMap<UniqueTimestamp, Message> messages = clientLogic.printHistoryOfChat(currentChatPartner);
-        JTextArea chatTextArea = (JTextArea) ((JScrollPane) panelChatView.getComponent(1)).getViewport().getView();
-        chatTextArea.setText("");
-        if (messages != null) {
-            for (Map.Entry<UniqueTimestamp, Message> entry : messages.entrySet()) {
-                Message message = entry.getValue();
-                String sender = message.getSender();
-                String messageText = message.getMessageText();
-                chatTextArea.append(sender + ": " + messageText + "\n");
-                System.out.println(messageText);
+        if (currentChatPartner != null){
+            TreeMap<UniqueTimestamp, Message> messages = clientLogic.printHistoryOfChat(currentChatPartner);
+            JTextArea chatTextArea = (JTextArea) ((JScrollPane) panelChatView.getComponent(1)).getViewport().getView();
+            chatTextArea.setText("");
+            if (messages != null) {
+                for (Map.Entry<UniqueTimestamp, Message> entry : messages.entrySet()) {
+                    Message message = entry.getValue();
+                    String sender = message.getSender();
+                    String messageText = message.getMessageText();
+                    chatTextArea.append(sender + ": " + messageText + "\n");
+                    System.out.println(messageText);
+                }
             }
         }
     }
