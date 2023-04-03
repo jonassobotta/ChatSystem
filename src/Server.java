@@ -65,12 +65,10 @@ public class Server extends Thread {
                         if (userPortStorage.containsUser(message.getSender()) == false && message.getSender().contains("Server") == false) {
                             int assignedPort = generateUniqueRandomNumber();
                             System.out.println(assignedPort);
-                            //TODO: sync user storage
                             syncUserPortStorage(message.getSender(), clientSocket.getInetAddress(), assignedPort);
-
                         }
                         if (message.getStatus().equals("GET")) {
-                            ArrayList<MessageStorage.Chat> relevantMsg = getRelevantMessages(message);
+                            MessageStorage relevantMsg = getRelevantMessages(message);
 
                             Message myMsg = new Message(relevantMsg, "OK", userPortStorage.getUser(message.getSender()).getPort());
 
@@ -78,20 +76,18 @@ public class Server extends Thread {
                             System.out.println("sent message history of user " + message.getSender());
                         } else if (message.getStatus().equals("SEND")) {
                             messageStorage.addMessage(message);
-                            //TODO: sync message storage
                             syncServerMessageStorage(message);
                             sendMessageToReceiver(message);
-                            //messageStorage.print();
                             out.writeObject(new Message("OK"));
                         } else if (message.getStatus().equals("SYNC_USER")) {
                             messageStorage.addMessage(message);
                             userPortStorage.addUser(message.getUsername(), message.getInetAddress(), message.getPort());
-                            System.out.println("user sind sync");
+                            //System.out.println("user sind sync");
                             userPortStorage.print();
                         } else if (message.getStatus().equals("SYNC_MESSAGE")) {
                             System.out.println("DEMO: " + message.getMessage().getMessageText());
                             this.messageStorage.addMessage(message.getMessage());
-                            System.out.println("messages sind sync");
+                            //System.out.println("messages sind sync");
                             messageStorage.print();
                         }
                     }
@@ -143,7 +139,7 @@ public class Server extends Thread {
         }
     }
 
-    private ArrayList<MessageStorage.Chat> getRelevantMessages(Message message) {
+    private  MessageStorage getRelevantMessages(Message message) {
         return messageStorage.getChatsForUser(message.getSender());
     }
 
@@ -166,31 +162,33 @@ public class Server extends Thread {
                     System.out.println("Message from " + message.getSender() + " to " + message.getReciver() + "could not be forwarded due to missing information");
                 }
             } catch (Exception e) {
-                System.out.println("send to reciever error: "  + e.getMessage());
+                System.out.println("send to reciever error: " + e.getMessage());
             }
         }).start();
     }
 
     private void syncServerMessageStorage(Message message) {
-        int connectionPort = 8888;
-        String serverSender = "Server2";
-        String serverReciver = "Server1";
-        if (this.serverPort == 8888) {
-            connectionPort = 7777;
-            serverSender = "Server1";
-            serverReciver = "Server2";
-        }
-        try {
-            Socket socket = new Socket(serverAdress, connectionPort);
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            out.writeObject(new Message(serverSender, serverToken, serverReciver, message));
-            in.close();
-            out.close();
-            socket.close();
-        } catch (Exception e) {
-            System.out.println("send to reciever error: " + e.getMessage());
-        }
+        new Thread(() -> {
+            int connectionPort = 8888;
+            String serverSender = "Server2";
+            String serverReciver = "Server1";
+            if (this.serverPort == 8888) {
+                connectionPort = 7777;
+                serverSender = "Server1";
+                serverReciver = "Server2";
+            }
+            try {
+                Socket socket = new Socket(serverAdress, connectionPort);
+                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                out.writeObject(new Message(serverSender, serverToken, serverReciver, message));
+                in.close();
+                out.close();
+                socket.close();
+            } catch (Exception e) {
+                System.out.println("send to reciever error: " + e.getMessage());
+            }
+        }).start();
     }
 
     public static void printTreeMap(TreeMap<UniqueTimestamp, Message> map) {

@@ -14,9 +14,8 @@ public class MessageStorage implements Serializable{
         userList = new ArrayList<>();
     }
 
-    public ArrayList<Chat> getChatsForUser(String user) {
-        ArrayList<Chat> result = new ArrayList<>();
-
+    public MessageStorage getChatsForUser(String user) {
+        MessageStorage result = new MessageStorage();
         for (Map.Entry<String, Chat> entry : storage.entrySet()) {
             String userCombination = entry.getKey();
             Chat chat = entry.getValue();
@@ -27,12 +26,14 @@ public class MessageStorage implements Serializable{
             }
 
             if (users[0].equals(user) || users[1].equals(user)) {
-                result.add(chat);
+                result.storage.put(userCombination, chat);
             }
         }
 
         return result;
     }
+
+
 
 
 

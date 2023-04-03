@@ -12,7 +12,7 @@ public class Message  implements Serializable {
     private String token;
     private String status;
     private long timestamp;
-    private ArrayList<MessageStorage.Chat> msgList;
+    private MessageStorage msgList;
     private int port;
     private InetAddress inetAddress;
     private Message message;
@@ -43,7 +43,7 @@ public class Message  implements Serializable {
     }
 
     //first server answer
-    public Message(ArrayList<MessageStorage.Chat> msgList, String status, int port) {
+    public Message(MessageStorage msgList, String status, int port) {
         this.msgList = msgList;
         this.status = status;
         this.port = port;
@@ -68,7 +68,7 @@ public class Message  implements Serializable {
         this.timestamp = System.currentTimeMillis();
     }
 
-    public ArrayList<MessageStorage.Chat> getMsgList(){
+    public MessageStorage getMsgList(){
         return this.msgList;
     }
 

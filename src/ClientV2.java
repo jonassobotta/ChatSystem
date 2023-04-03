@@ -3,6 +3,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class ClientV2 {
@@ -14,7 +15,7 @@ public class ClientV2 {
     }
 
     int[] serverPorts = {7777, 8888};
-    private final String serverAdress = "192.168.178.29";
+    private final String serverAdress = "192.168.178.81";
     private state clientState;
     private BufferedReader reader;
     private Socket socket = null;
@@ -23,6 +24,7 @@ public class ClientV2 {
     private String token;
     private String receiver;
     private static int listenPort;
+    private MessageStorage messageStorage;
 
     public static void main(String[] args) {
         ClientV2 halloo = new ClientV2();
@@ -39,7 +41,7 @@ public class ClientV2 {
         }
     }
 
-    class Reader extends Thread {
+    class Writer extends Thread {
         public void run() {
             System.out.print("enter username: ");
             while (true) {
@@ -66,6 +68,7 @@ public class ClientV2 {
                     } else if (clientState == state.receiverRequired) {
                         clientState = state.messageRequired;
                         receiver = readerText;
+                        printHistoryOfChat(receiver);
                         System.out.print("enter message: ");
                     } else if (clientState == state.messageRequired) {
                         clientState = state.messageRequired;
@@ -80,7 +83,11 @@ public class ClientV2 {
         }
     }
 
-    class Writer extends Thread {
+    private void printHistoryOfChat(String receiver) {
+        Server.printTreeMap(messageStorage.getMessages(username, receiver));
+    }
+
+    class Listener extends Thread {
         public void run() {
             System.out.println("Writer running");
             try {
@@ -111,8 +118,8 @@ public class ClientV2 {
     }
 
     public void start() {
+        new Listener().start();
         new Writer().start();
-        new Reader().start();
     }
 
     private void addMessageToHistory(Message message) {
@@ -125,11 +132,7 @@ public class ClientV2 {
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
-
-            for (MessageStorage.Chat chat : answer.getMsgList()){
-                Server.printTreeMap(chat.getMessages());
-            }
-
+            this.messageStorage = answer.getMsgList();
             return true;
         } else {
             return false;
