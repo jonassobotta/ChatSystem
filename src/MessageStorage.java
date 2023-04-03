@@ -75,6 +75,24 @@ public class MessageStorage implements Serializable{
             return chat;
         }
     }
+    public void print() {
+        System.out.println("=== Message Storage ===");
+        for (Map.Entry<String, Chat> entry : storage.entrySet()) {
+            String userCombination = entry.getKey();
+            Chat chat = entry.getValue();
+
+            System.out.println("Users: " + userCombination);
+            TreeMap<UniqueTimestamp, Message> messages = chat.getMessages();
+            for (Map.Entry<UniqueTimestamp, Message> msgEntry : messages.entrySet()) {
+                UniqueTimestamp uniqueTimestamp = msgEntry.getKey();
+                Message message = msgEntry.getValue();
+                Timestamp timestamp = new Timestamp(message.getTimestamp());
+                System.out.println(String.format("  [%s] %s: %s", timestamp.toString(), uniqueTimestamp.user, message.getMessageText()));
+            }
+        }
+        System.out.println("=======================");
+    }
+
 }
 
 // Empty message

@@ -13,8 +13,8 @@ public class ClientV2 {
         messageRequired,
     }
 
-    int[] serverPorts = {7777, 7777};
-    private final String serverAdress = "127.0.0.1";
+    int[] serverPorts = {7777, 8888};
+    private final String serverAdress = "192.168.178.29";
     private state clientState;
     private BufferedReader reader;
     private Socket socket = null;

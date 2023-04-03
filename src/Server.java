@@ -3,7 +3,7 @@ import java.net.*;
 import java.util.*;
 
 public class Server extends Thread {
-    private final String serverAdress = "127.0.0.1";
+    private final String serverAdress = "192.168.178.29";
     public int serverPort;
     public ArrayList<User> userList = new ArrayList<>();
     public MessageStorage messageStorage;
@@ -24,6 +24,8 @@ public class Server extends Thread {
         this.serverPort = serverPort;
         userList.add(new User("joel", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
         userList.add(new User("nico", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
+        userList.add(new User("jonas", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
+        userList.add(new User("luca", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
         userList.add(new User("Server1", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
         userList.add(new User("Server2", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
 
@@ -79,7 +81,7 @@ public class Server extends Thread {
                             //TODO: sync message storage
                             syncServerMessageStorage(message);
                             sendMessageToReceiver(message);
-                            //printMap(messageStorage);
+                            //messageStorage.print();
                             out.writeObject(new Message("OK"));
                         } else if (message.getStatus().equals("SYNC_USER")) {
                             messageStorage.addMessage(message);
@@ -87,9 +89,10 @@ public class Server extends Thread {
                             System.out.println("user sind sync");
                             userPortStorage.print();
                         } else if (message.getStatus().equals("SYNC_MESSAGE")) {
-                            messageStorage.addMessage(message.getMessage());
+                            System.out.println("DEMO: " + message.getMessage().getMessageText());
+                            this.messageStorage.addMessage(message.getMessage());
                             System.out.println("messages sind sync");
-                            printMap(messageStorage);
+                            messageStorage.print();
                         }
                     }
                 } else {
@@ -145,23 +148,27 @@ public class Server extends Thread {
     }
 
     private void sendMessageToReceiver(Message message) {
-        try {
-            UserStorage.Body user;
-            if ((user = userPortStorage.getUser(message.getReciver())) != null) {
-                Socket socket = new Socket(user.getInetAddress().toString().substring(1), user.getPort());
-                ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                out.writeObject(message);
-                in.close();
-                out.close();
-                socket.close();
-                System.out.println("Forwarded Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
-            } else {
-                System.out.println("Message from " + message.getSender() + " to " + message.getReciver() + "could not be forwarded due to missing information");
+        new Thread(() -> {
+            try {
+                UserStorage.Body user;
+                if ((user = userPortStorage.getUser(message.getReciver())) != null) {
+                    System.out.println("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
+                    Socket socket = new Socket(user.getInetAddress().toString().substring(1), user.getPort());
+                    System.out.println("nach socket");
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+                    out.writeObject(message);
+                    in.close();
+                    out.close();
+                    socket.close();
+                    System.out.println("Forwarded Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
+                } else {
+                    System.out.println("Message from " + message.getSender() + " to " + message.getReciver() + "could not be forwarded due to missing information");
+                }
+            } catch (Exception e) {
+                System.out.println("send to reciever error: "  + e.getMessage());
             }
-        } catch (Exception e) {
-            System.out.println("send to reciever error: " + e.getMessage());
-        }
+        }).start();
     }
 
     private void syncServerMessageStorage(Message message) {
@@ -196,19 +203,6 @@ public class Server extends Thread {
             UniqueTimestamp uniqueTimestamp = entry.getKey();
             Message message = entry.getValue();
             System.out.println(uniqueTimestamp.timestamp + " - " + uniqueTimestamp.user + ": " + message.getMessageText());
-        }
-    }
-
-    public static void printMap(MessageStorage myStorage) {
-        TreeMap<UniqueTimestamp, Message> myMap = myStorage.getMessages("joel", "nico");
-        if (myMap != null) {
-            for (Map.Entry<UniqueTimestamp, Message> entry : myMap.entrySet()) {
-                UniqueTimestamp uniqueTimestamp = entry.getKey();
-                Message message = entry.getValue();
-                System.out.println(uniqueTimestamp.timestamp + " - " + uniqueTimestamp.user + ": " + message.getMessageText());
-            }
-        } else {
-            System.out.println("No messages found");
         }
     }
 
