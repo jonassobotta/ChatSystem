@@ -39,4 +39,11 @@ public class UserStorage {
             return port;
         }
     }
+    public void print() {
+        for (String username : map.keySet()) {
+            Body body = map.get(username);
+            System.out.println(username + ": " + body.getInetAddress().getHostAddress() + ":" + body.getPort());
+        }
+    }
+
 }

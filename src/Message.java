@@ -1,9 +1,11 @@
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
 public class Message  implements Serializable {
 
+    private String username;
     private String sender;
     private String reciver;
     private String messageText;
@@ -12,6 +14,16 @@ public class Message  implements Serializable {
     private long timestamp;
     private ArrayList<MessageStorage.Chat> msgList;
     private int port;
+    private InetAddress inetAddress;
+    private Message message;
+
+    public Message (String sender, String token, String reciver, Message message ){
+        this.sender = sender;
+        this.status = "SYNC_MESSAGE";
+        this.reciver = reciver;
+        this.token = token;
+        this.message = message;
+    }
 
     //first client msg for login
     public Message(String sender, String token, String status) {
@@ -19,6 +31,15 @@ public class Message  implements Serializable {
         this.status = status;
         this.token = token;
         this.timestamp = System.currentTimeMillis();
+    }
+    public Message (String sender, String token, String reciver, String username , InetAddress inetAddress, int assignedPort ){
+        this.sender = sender;
+        this.inetAddress = inetAddress;
+        this.port = assignedPort;
+        this.status = "SYNC_USER";
+        this.reciver = reciver;
+        this.token = token;
+        this.username = username;
     }
 
     //first server answer
@@ -37,6 +58,11 @@ public class Message  implements Serializable {
         this.status = "SEND";
         this.timestamp = System.currentTimeMillis();
     }
+
+    public InetAddress getInetAddress() {
+        return inetAddress;
+    }
+
     public Message(String status) {
         this.status = status;
         this.timestamp = System.currentTimeMillis();
@@ -49,7 +75,9 @@ public class Message  implements Serializable {
     public long getTimestamp(){
         return this.timestamp;
     }
-
+    public String getUsername(){
+        return this.username;
+    }
     public String getStatus(){
         return this.status;
     }
@@ -72,4 +100,8 @@ public class Message  implements Serializable {
     public String getMessageText() {
         return messageText;
     }
+    public Message getMessage(){
+        return this.message;
+    }
+
 }

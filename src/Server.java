@@ -3,17 +3,19 @@ import java.net.*;
 import java.util.*;
 
 public class Server extends Thread {
+    private final String serverAdress = "127.0.0.1";
     public int serverPort;
     public ArrayList<User> userList = new ArrayList<>();
     public MessageStorage messageStorage;
     private UserStorage userPortStorage;
     private Set<Integer> usedNumbers = new HashSet<>();
+    private final String serverToken = "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa";
 
 
     public static void main(String[] args) throws Exception {
         // Set the port number for the server
         new Server(7777).start();
-        //new Server(8888).start();
+        new Server(8888).start();
     }
 
     public Server(int serverPort) {
@@ -22,6 +24,8 @@ public class Server extends Thread {
         this.serverPort = serverPort;
         userList.add(new User("joel", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
         userList.add(new User("nico", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
+        userList.add(new User("Server1", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
+        userList.add(new User("Server2", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
 
     }
 
@@ -56,10 +60,12 @@ public class Server extends Thread {
                     if (message.getReciver() != null && message.getReciver().equals(message.getSender())) {
                         out.writeObject(new Message("FAILED"));
                     } else {
-                        if (userPortStorage.containsUser(message.getSender()) == false) {
+                        if (userPortStorage.containsUser(message.getSender()) == false && message.getSender().contains("Server") == false) {
                             int assignedPort = generateUniqueRandomNumber();
                             System.out.println(assignedPort);
-                            userPortStorage.addUser(message.getSender(), clientSocket.getInetAddress(), assignedPort);
+                            //TODO: sync user storage
+                            syncUserPortStorage(message.getSender(), clientSocket.getInetAddress(), assignedPort);
+
                         }
                         if (message.getStatus().equals("GET")) {
                             ArrayList<MessageStorage.Chat> relevantMsg = getRelevantMessages(message);
@@ -70,10 +76,20 @@ public class Server extends Thread {
                             System.out.println("sent message history of user " + message.getSender());
                         } else if (message.getStatus().equals("SEND")) {
                             messageStorage.addMessage(message);
-                            //msg forwarding
+                            //TODO: sync message storage
+                            syncServerMessageStorage(message);
                             sendMessageToReceiver(message);
-                            printMap(messageStorage);
+                            //printMap(messageStorage);
                             out.writeObject(new Message("OK"));
+                        } else if (message.getStatus().equals("SYNC_USER")) {
+                            messageStorage.addMessage(message);
+                            userPortStorage.addUser(message.getUsername(), message.getInetAddress(), message.getPort());
+                            System.out.println("user sind sync");
+                            userPortStorage.print();
+                        } else if (message.getStatus().equals("SYNC_MESSAGE")) {
+                            messageStorage.addMessage(message.getMessage());
+                            System.out.println("messages sind sync");
+                            printMap(messageStorage);
                         }
                     }
                 } else {
@@ -96,11 +112,38 @@ public class Server extends Thread {
         }
     }
 
-    private  ArrayList<MessageStorage.Chat> getRelevantMessages(Message message) {
+    private void syncUserPortStorage(String sender, InetAddress inetAddress, int assignedPort) {
+        userPortStorage.addUser(sender, inetAddress, assignedPort);
+        try {
+            int connectionPort = 8888;
+            String serverSender = "Server2";
+            String serverReciver = "Server1";
+            if (this.serverPort == 8888) {
+                connectionPort = 7777;
+                serverSender = "Server1";
+                serverReciver = "Server2";
+            }
+            System.out.println("Sync User Data");
+            Socket socket = new Socket(serverAdress, connectionPort);
+
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+
+            out.writeObject(new Message(serverSender, serverToken, serverReciver, sender, inetAddress, assignedPort));
+
+            in.close();
+            out.close();
+            socket.close();
+
+        } catch (IOException e) {
+            System.out.println("Sync failed" + e.getMessage());
+        }
+    }
+
+    private ArrayList<MessageStorage.Chat> getRelevantMessages(Message message) {
         return messageStorage.getChatsForUser(message.getSender());
     }
 
-    //geht net
     private void sendMessageToReceiver(Message message) {
         try {
             UserStorage.Body user;
@@ -120,6 +163,29 @@ public class Server extends Thread {
             System.out.println("send to reciever error: " + e.getMessage());
         }
     }
+
+    private void syncServerMessageStorage(Message message) {
+        int connectionPort = 8888;
+        String serverSender = "Server2";
+        String serverReciver = "Server1";
+        if (this.serverPort == 8888) {
+            connectionPort = 7777;
+            serverSender = "Server1";
+            serverReciver = "Server2";
+        }
+        try {
+            Socket socket = new Socket(serverAdress, connectionPort);
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+            out.writeObject(new Message(serverSender, serverToken, serverReciver, message));
+            in.close();
+            out.close();
+            socket.close();
+        } catch (Exception e) {
+            System.out.println("send to reciever error: " + e.getMessage());
+        }
+    }
+
     public static void printTreeMap(TreeMap<UniqueTimestamp, Message> map) {
         if (map == null) {
             System.out.println("Map is null");
