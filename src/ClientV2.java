@@ -3,7 +3,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Map;
 import java.util.Random;
 
 public class ClientV2 {
@@ -89,7 +88,7 @@ public class ClientV2 {
                 while (listenPort == -1) {
                     sleep(1);
                 }
-                ServerSocket serverSocket = new ServerSocket(listenPort);
+                serverSocket = new ServerSocket(listenPort);
                 System.out.println("Listenserver created with port " + serverSocket.getLocalPort());
                 while (true) {
                     Socket clientSocket = serverSocket.accept();

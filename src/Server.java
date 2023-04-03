@@ -4,10 +4,11 @@ import java.util.*;
 
 public class Server extends Thread {
     public int serverPort;
-    public ArrayList<Message> msgList = new ArrayList<>();
     public ArrayList<User> userList = new ArrayList<>();
     public MessageStorage messageStorage;
     private UserStorage userPortStorage;
+    private Set<Integer> usedNumbers = new HashSet<>();
+
 
     public static void main(String[] args) throws Exception {
         // Set the port number for the server
@@ -144,8 +145,6 @@ public class Server extends Thread {
             System.out.println("No messages found");
         }
     }
-
-    private Set<Integer> usedNumbers = new HashSet<>();
 
     public int generateUniqueRandomNumber() {
         Random rand = new Random();
