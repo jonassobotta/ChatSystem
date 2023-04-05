@@ -3,7 +3,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeMap;
 
@@ -90,7 +89,7 @@ public class ClientV2 {
     }
 
     public TreeMap<UniqueTimestamp, Message> printHistoryOfChat(String receiver) {
-        Server.printTreeMap(messageStorage.getMessages(username, receiver));
+        //Server.printTreeMap(messageStorage.getMessages(username, receiver));
         return messageStorage.getMessages(username, receiver);
     }
 
@@ -139,7 +138,7 @@ public class ClientV2 {
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
-            this.messageStorage = answer.getMsgList();
+            this.messageStorage = answer.getMessageStorage();
             return true;
         } else {
             return false;

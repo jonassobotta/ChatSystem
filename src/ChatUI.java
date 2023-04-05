@@ -50,9 +50,32 @@ public class ChatUI extends JFrame {
         JLabel labelChatList = new JLabel("Chat List");
         panelChatList.add(labelChatList, BorderLayout.NORTH);
 
+        JPanel panelHeader = new JPanel(new BorderLayout());
+        JLabel labelHeader = new JLabel("Chats");
+        panelHeader.add(labelHeader, BorderLayout.WEST);
+        panelChatList.add(panelHeader, BorderLayout.NORTH);
+
+
+        JButton buttonLogout = new JButton("Logout");
+        panelHeader.add(buttonLogout, BorderLayout.EAST);
+
+
         JScrollPane chatListScrollPane = new JScrollPane(chatList);
         panelChatList.add(chatListScrollPane, BorderLayout.CENTER);
         JButton buttonAddChat = new JButton("Add Chat");
+
+        buttonLogout.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("logout pls");
+                passwordField.setText("");
+                usernameField.setText("");
+                CardLayout cl = (CardLayout) panelCards.getLayout();
+                cl.show(panelCards, "Login");
+
+            }
+        });
+
         buttonAddChat.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -139,13 +162,16 @@ public class ChatUI extends JFrame {
                 System.out.println("Password: " + password);
                 clientLogic.setPassword(password);
                 try {
-                    if (clientLogic.checkUserData()) {
+                    if (clientLogic.checkUserData().equals("OK")) {
                         //weiter
                         chats = clientLogic.getAllChatPartners(username);
                         chatList.setListData(chats.toArray(new String[0]));
                         CardLayout cl = (CardLayout) panelCards.getLayout();
                         cl.show(panelCards, "ChatList");
-                    } else {
+                    } else if (clientLogic.checkUserData().equals("CONNECTION_ERROR")){
+
+                    }
+                    else {
                         //zurück
                         showInvalidPasswordPopup();
                     }

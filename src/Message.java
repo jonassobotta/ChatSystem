@@ -1,7 +1,5 @@
 import java.io.Serializable;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.TreeMap;
 
 public class Message  implements Serializable {
 
@@ -9,13 +7,19 @@ public class Message  implements Serializable {
     private String sender;
     private String reciver;
     private String messageText;
+
+    public UserStorage getUserStorage() {
+        return userStorage;
+    }
+
     private String token;
     private String status;
     private long timestamp;
-    private MessageStorage msgList;
+    private MessageStorage messageStorage;
     private int port;
     private InetAddress inetAddress;
     private Message message;
+    private UserStorage userStorage;
 
     public Message (String sender, String token, String reciver, Message message ){
         this.sender = sender;
@@ -44,7 +48,7 @@ public class Message  implements Serializable {
 
     //first server answer
     public Message(MessageStorage msgList, String status, int port) {
-        this.msgList = msgList;
+        this.messageStorage = msgList;
         this.status = status;
         this.port = port;
         this.timestamp = System.currentTimeMillis();
@@ -68,8 +72,17 @@ public class Message  implements Serializable {
         this.timestamp = System.currentTimeMillis();
     }
 
-    public MessageStorage getMsgList(){
-        return this.msgList;
+    public Message(String sender, String token, String status, MessageStorage msgList, UserStorage userStorage){
+        this.sender = sender;
+        this.token = token;
+        this.status = status;
+        this.messageStorage = msgList;
+        this.userStorage = userStorage;
+    }
+
+
+    public MessageStorage getMessageStorage(){
+        return this.messageStorage;
     }
 
     public long getTimestamp(){

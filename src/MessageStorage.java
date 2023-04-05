@@ -108,6 +108,28 @@ public class MessageStorage implements Serializable{
         }
         return chatPartners;
     }
+    public void join(MessageStorage otherStorage) {
+        // Join the chat messages
+        for (Map.Entry<String, Chat> entry : otherStorage.storage.entrySet()) {
+            String key = entry.getKey();
+            Chat otherChat = entry.getValue();
+            Chat chat = storage.getOrDefault(key, new Chat());
+            for (Map.Entry<UniqueTimestamp, Message> msgEntry : otherChat.chat.entrySet()) {
+                UniqueTimestamp uniqueTimestamp = msgEntry.getKey();
+                Message message = msgEntry.getValue();
+                chat.addMessage(message);
+            }
+            storage.put(key, chat);
+        }
+
+        // Join the user list
+        for (String user : otherStorage.userList) {
+            if (!userList.contains(user)) {
+                userList.add(user);
+            }
+        }
+    }
+
 }
 
 // Empty message
