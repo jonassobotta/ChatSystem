@@ -136,7 +136,10 @@ public class ChatUI extends JFrame {
                 System.out.println("Message: " + message);
                 messageInputField.setText("");
                 try {
-                    clientLogic.sendMessage(message);
+                    Message answer = clientLogic.sendMessage(message);
+                    if(answer.getStatus().equals("FAILED")){
+                        showBadConnectionPopup();
+                    }
                 } catch (Exception error){
                     System.out.println(error.getMessage());
                 }
@@ -161,19 +164,21 @@ public class ChatUI extends JFrame {
                 clientLogic.setUsername(username);
                 System.out.println("Password: " + password);
                 clientLogic.setPassword(password);
+
                 try {
-                    if (clientLogic.checkUserData().equals("OK")) {
+                    String stateOfConnection = clientLogic.checkUserData(0);
+                    System.out.println(stateOfConnection);
+                    if (stateOfConnection.equals("OK")) {
                         //weiter
                         chats = clientLogic.getAllChatPartners(username);
                         chatList.setListData(chats.toArray(new String[0]));
                         CardLayout cl = (CardLayout) panelCards.getLayout();
                         cl.show(panelCards, "ChatList");
-                    } else if (clientLogic.checkUserData().equals("CONNECTION_ERROR")){
-
-                    }
-                    else {
-                        //zurück
+                    } else if (stateOfConnection.equals("INVALID_USER")){
                         showInvalidPasswordPopup();
+                    }else {
+                        //zurück
+                        showBadConnectionPopup();
                     }
 
                 } catch (Exception error) {
@@ -203,6 +208,9 @@ public class ChatUI extends JFrame {
 
     private void showInvalidPasswordPopup() {
         JOptionPane.showMessageDialog(this, "Invalid password. Please try again.", "Login Error", JOptionPane.ERROR_MESSAGE);
+    }
+    private void showBadConnectionPopup() {
+        JOptionPane.showMessageDialog(this, "Bad Connection, try again later", "Connection Error", JOptionPane.ERROR_MESSAGE);
     }
     public void updateChatList(){
         chats = clientLogic.getAllChatPartners(username);

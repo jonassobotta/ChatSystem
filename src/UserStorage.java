@@ -24,7 +24,7 @@ public class UserStorage implements Serializable {
         return map.containsKey(username);
     }
 
-    public static class Body implements Serializable{
+    public static class Body implements Serializable {
         private InetAddress inetAddress;
         private int port;
 
@@ -48,13 +48,31 @@ public class UserStorage implements Serializable {
         public void setPort(int port) {
             this.port = port;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Body body = (Body) o;
+            if (port != body.port) return false;
+            return inetAddress != null ? inetAddress.equals(body.inetAddress) : body.inetAddress == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = inetAddress != null ? inetAddress.hashCode() : 0;
+            result = 31 * result + port;
+            return result;
+        }
     }
+
     public void print() {
         for (String username : map.keySet()) {
             Body body = map.get(username);
             System.out.println(username + ": " + body.getInetAddress().getHostAddress() + ":" + body.getPort());
         }
     }
+
     public void join(UserStorage other) {
         for (String username : other.map.keySet()) {
             if (!map.containsKey(username)) {
@@ -63,6 +81,19 @@ public class UserStorage implements Serializable {
                 map.put(username, body);
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserStorage that = (UserStorage) o;
+        return map.equals(that.map);
+    }
+
+    @Override
+    public int hashCode() {
+        return map.hashCode();
     }
 
 

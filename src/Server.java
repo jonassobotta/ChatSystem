@@ -1,22 +1,24 @@
 import java.io.*;
 import java.net.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class Server extends Thread {
-    private final String serverAdress = "192.168.178.81";
+    private final String serverAdress = "192.168.178.29";
     public int serverPort;
     public ArrayList<User> userList = new ArrayList<>();
     public MessageStorage messageStorage;
     private String serverName;
-    private UserStorage userPortStorage;
+    public UserStorage userPortStorage;
     private int partnerPort;
     private Set<Integer> usedNumbers = new HashSet<>();
     private final String serverToken = "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa";
     public static void main(String[] args) throws Exception {
         // Set the port number for the server
         new Server(7777).start();
-
         new Server(8888).start();
+
     }
     public Server(int serverPort) {
         usedNumbers.add(7777);
@@ -26,21 +28,15 @@ public class Server extends Thread {
         this.userPortStorage = new UserStorage();
         this.messageStorage = new MessageStorage();
         this.serverPort = serverPort;
-        userList.add(new User("joel", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
-        userList.add(new User("nico", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
-        userList.add(new User("jonas", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
-        userList.add(new User("luca", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
-        userList.add(new User("Server1", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
-        userList.add(new User("Server2", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));
+        userList.add(new User("joel", "f11a60c74bca3ace583fac190409a5c32f83e61e1d2f7097de9674ad2c4ea877"));//Passwort ist JoelPw
+        userList.add(new User("jonas", "1c461504c316958f1b46ce6f387dde8981ee548572a682a69abf708ecb3ca94c"));//Passwort ist JonasPw
+        userList.add(new User("luca", "bb525174242421707805642da8e45a984bcef043ed6235476d00e9b626ae520d"));//Passwort ist LucaPw
+        userList.add(new User("sarah", "be069a5e1fc5c8e3117cbb51ba554403a75d15545a735b09480cb4de5c3fdf3e"));//Passwort ist SarahPw
+        userList.add(new User("Server1", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));//Passwort ist joel
+        userList.add(new User("Server2", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));//Passwort ist joel
     }
 
     public void run() {
-
-        try {
-            if(serverPort == 8888)Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
 
         try {
             // Create a server socket
@@ -80,7 +76,7 @@ public class Server extends Thread {
                     }
                 } else {
                     printOfServer("invalid user");
-                    out.writeObject(new Message("FAILED"));
+                    out.writeObject(new Message("INVALID_USER"));
                 }
                 // Close the client socket and streams
                 in.close();
@@ -98,6 +94,7 @@ public class Server extends Thread {
         new Thread(() -> {
                 Message answer;
                 try {
+                    System.out.println("test");
                     answer = new TCPConnection(serverAdress, partnerPort).sendMessage(new Message(this.serverName, this.serverToken, "REBOOT")).receiveAnswer();
                     printOfServer("Server is updating with other server");
                     messageStorage.print();

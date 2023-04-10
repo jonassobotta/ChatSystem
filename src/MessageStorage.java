@@ -2,6 +2,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class MessageStorage implements Serializable{
@@ -32,10 +33,6 @@ public class MessageStorage implements Serializable{
 
         return result;
     }
-
-
-
-
 
     public void addMessage(Message message) {
         String userCombination = getUserCombinationKey(message.getSender(), message.getReciver());
@@ -128,6 +125,23 @@ public class MessageStorage implements Serializable{
                 userList.add(user);
             }
         }
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final MessageStorage other = (MessageStorage) obj;
+        if (!Objects.equals(this.storage, other.storage)) {
+            return false;
+        }
+        if (!Objects.equals(this.userList, other.userList)) {
+            return false;
+        }
+        return true;
     }
 
 }
