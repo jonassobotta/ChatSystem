@@ -148,9 +148,10 @@ public class ClientLogic2 {
 
     public static int randomNumber() {
         Random random = new Random();
-        int randomNumber = random.nextInt(2);
+        int randomNumber = random.nextInt(3);
         return randomNumber;
     }
+
 
     public static String generateToken(String input) {
         try {

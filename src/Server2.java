@@ -80,11 +80,8 @@ public class Server2 extends Thread {
                         //assign listen port to user
                         if ( message.getSender().contains("Server") || assignListenPort(message, clientSocket.getInetAddress(), clientSocket)) {
                             //handel commands of user
-                            printOfServer("handle");
                             handleClientCommands(message.getStatus(), message, out);
                         } else {
-                            printOfServer("lkjhgvfcdxfghjklö");
-
                             out.writeObject(new Message("FAILED"));
                         }
                     }
@@ -121,16 +118,17 @@ public class Server2 extends Thread {
                 return false;
             }
         }
-        return false;
+        return true;
     }
 
     private boolean syncUserInetAdress(String sender, InetAddress inetAddress, int assignedPort) {
         Message answer;
+        int first = randomNumber();
         try {
-            new TCPConnection(serverAdress, partnerPorts.get(0)).sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).closeConnection();
+            new TCPConnection(serverAdress, partnerPorts.get(first)).sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).closeConnection();
         } catch (Exception e) {
             try {
-                new TCPConnection(serverAdress, partnerPorts.get(1)).sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).closeConnection();
+                new TCPConnection(serverAdress, partnerPorts.get(getInverse(first))).sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).closeConnection();
             } catch (Exception e2) {
                 System.out.println("Sync failed" + e.getMessage());
                 return false;
@@ -145,8 +143,8 @@ public class Server2 extends Thread {
         printOfServer(inputCommand);
         switch (inputCommand) {
             case "GET":
-                MessageStorage relevantMsg = this.messageStorage.getChatsForUser(message.getSender());
                 if (getMessageStorrageFromOtherServer()) {
+                    MessageStorage relevantMsg = this.messageStorage.getChatsForUser(message.getSender());
                     out.writeObject(new Message(relevantMsg, "OK", this.userPortStorage.getUser(message.getSender()).getPort()));
                     printOfServer("sent message history of user " + message.getSender());
                 } else {
@@ -195,12 +193,13 @@ public class Server2 extends Thread {
     private boolean getMessageStorrageFromOtherServer() {
         TCPConnection myConnection;
         Message answer;
+        int first = randomNumber();
         try {
-            myConnection = new TCPConnection(serverAdress, partnerPorts.get(0));
+            myConnection = new TCPConnection(serverAdress, partnerPorts.get(first));
             answer = myConnection.sendMessage(new Message(this.serverName, this.serverToken, "SYNC_MESSAGE_STORAGE")).receiveAnswer();
         } catch (Exception e) {
             try {
-                myConnection = new TCPConnection(serverAdress, partnerPorts.get(1));
+                myConnection = new TCPConnection(serverAdress, partnerPorts.get(getInverse(first)));
                 answer = myConnection.sendMessage(new Message(this.serverName, this.serverToken, "SYNC_MESSAGE_STORAGE")).receiveAnswer();
             } catch (Exception e2) {
                 return false;
@@ -213,12 +212,13 @@ public class Server2 extends Thread {
     private boolean syncUserPortStorage(String sender, InetAddress inetAddress, int assignedPort) {
         Message answer;
         TCPConnection myConnection;
+        int first = randomNumber();
         try {
-            myConnection = new TCPConnection(serverAdress, partnerPorts.get(0));
+            myConnection = new TCPConnection(serverAdress, partnerPorts.get(first));
             answer = myConnection.sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).receiveAnswer();
         } catch (Exception e) {
             try {
-                myConnection = new TCPConnection(serverAdress, partnerPorts.get(1));
+                myConnection = new TCPConnection(serverAdress, partnerPorts.get(getInverse(first)));
                 answer = myConnection.sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).receiveAnswer();
             } catch (Exception e2) {
                 System.out.println("Sync failed" + e.getMessage());
@@ -261,12 +261,12 @@ public class Server2 extends Thread {
     }
 
     private boolean syncServerMessageStorage(Message message) {
-
+        int first = randomNumber();
         try {
-            new TCPConnection(serverAdress, partnerPorts.get(0)).sendMessage(new Message("Server1", serverToken, "Server2", message)).closeConnection();
+            new TCPConnection(serverAdress, partnerPorts.get(first)).sendMessage(new Message("Server1", serverToken, "Server2", message)).closeConnection();
         } catch (Exception e) {
             try {
-                new TCPConnection(serverAdress, partnerPorts.get(1)).sendMessage(new Message("Server1", serverToken, "Server2", message)).closeConnection();
+                new TCPConnection(serverAdress, partnerPorts.get(getInverse(first))).sendMessage(new Message("Server1", serverToken, "Server2", message)).closeConnection();
             } catch (Exception e2) {
                 System.out.println("Sync failed" + e.getMessage());
                 return false;
@@ -292,5 +292,13 @@ public class Server2 extends Thread {
 
     public void printOfServer(String printText) {
         System.out.println(this.serverAdress + ":" + this.serverPort + " -> " + printText);
+    }
+    public static int randomNumber() {
+        Random random = new Random();
+        int randomNumber = random.nextInt(2);
+        return randomNumber;
+    }
+    public static int getInverse(int i) {
+        return (i + 1) % 2;
     }
 }
