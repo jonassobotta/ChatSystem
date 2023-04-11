@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeMap;
 
-public class ClientLogic {
-    int[] serverPorts = {7777, 8888};
+public class ClientLogic2 {
+    int[] serverPorts = {7777, 8888, 9999};
     private final String serverAdress = "192.168.178.29";
     private BufferedReader reader;
     private Socket socket = null;
@@ -21,7 +21,7 @@ public class ClientLogic {
     private ChatUI chatUI;
 
 
-    public ClientLogic(ChatUI chatUI) {
+    public ClientLogic2(ChatUI chatUI) {
         try {
             this.chatUI = chatUI;
             this.reader = new BufferedReader(new InputStreamReader(System.in));

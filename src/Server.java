@@ -112,7 +112,6 @@ public class Server extends Thread {
     private void assignListenPort(Message message, InetAddress inetAddress, Socket client) {
         if (userPortStorage.containsUser(message.getSender()) == false && message.getSender().contains("Server") == false) {
             int assignedPort = generateUniqueRandomNumber();
-            userPortStorage.addUser(message.getSender(), client.getInetAddress(), assignedPort);
             printOfServer(Integer.toString(assignedPort));
             syncUserPortStorage(message.getSender(), inetAddress, assignedPort);
         } else if (userPortStorage.containsUser(message.getSender()) && inetAddress.equals(userPortStorage.getUser(message.getSender()).getInetAddress()) == false) {

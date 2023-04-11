@@ -17,11 +17,14 @@ public class ChatUI extends JFrame {
     private JPanel panelChatView;
     private ArrayList<String> chats;
     private JList<String> chatList;
-    private ClientLogic clientLogic;
+    //private ClientLogic clientLogic;
+    private ClientLogic2 clientLogic;
     private String currentChatPartner;
 
     public ChatUI() {
-        clientLogic = new ClientLogic(this);
+        //clientLogic = new ClientLogic(this);
+        clientLogic = new ClientLogic2(this);
+
         clientLogic.start();
         // Set the size and title of the JFrame
         setSize(400, 300);

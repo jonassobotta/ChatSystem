@@ -12,7 +12,11 @@ public class UserStorage implements Serializable {
     }
 
     public Body getUser(String username) {
-        return map.get(username);
+        if(map.get(username) != null){
+            return map.get(username);
+        }else {
+            return new Body(null, -1);
+        }
     }
 
     public void removeUser(String username) {

@@ -20,6 +20,7 @@ public class Message  implements Serializable {
     private InetAddress inetAddress;
     private Message message;
     private UserStorage userStorage;
+    private UserStorage.Body body;
 
     public Message (String sender, String token, String reciver, Message message ){
         this.sender = sender;
@@ -44,6 +45,13 @@ public class Message  implements Serializable {
         this.reciver = reciver;
         this.token = token;
         this.username = username;
+    }
+    public Message(String sender, String token, String reciver, UserStorage.Body body, String status){
+        this.sender = sender;
+        this.token = token;
+        this.reciver = reciver;
+        this.body = body;
+        this.status = status;
     }
 
     //first server answer
