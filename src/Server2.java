@@ -78,11 +78,13 @@ public class Server2 extends Thread {
                     //ad user port to list
                     if (message.getReciver() != null && message.getReciver().equals(message.getSender())) {
                         //report error if sender and receiver are the same user
+                        printOfServer("hilfe: rec:" + (message.getReciver() != null )+ " oder: " + message.getReciver().equals(message.getSender()));
                         out.writeObject(new Message("FAILED"));
                     } else {
                         //assign listen port to user
                         if (message.getSender().contains("Server") || assignListenPort(message, clientSocket.getInetAddress(), clientSocket)) {
                             //handel commands of user
+                            printOfServer("tätärätä");
                             handleClientCommands(message.getStatus(), message, out);
                         } else {
                             out.writeObject(new Message("FAILED"));
@@ -92,7 +94,8 @@ public class Server2 extends Thread {
                     printOfServer("invalid user");
                     out.writeObject(new Message("INVALID_USER"));
                 }
-                // Close the client socket and streams
+                // Close the client socket and stream
+                printOfServer("close connection");
                 in.close();
                 out.close();
                 clientSocket.close();
@@ -100,7 +103,8 @@ public class Server2 extends Thread {
                 printOfServer("Client disconnected");
             }
         } catch (Exception e) {
-            printOfServer("Error: " + e.getMessage());
+            e.printStackTrace();
+            //printOfServer("Error: " + e.getMessage());
         }
     }
 
@@ -119,28 +123,36 @@ public class Server2 extends Thread {
             this.messageStorage.join(answer2.getMessageStorage());
             this.userPortStorage.join(answer1.getUserStorage());
             this.userPortStorage.join(answer2.getUserStorage());
-        }catch (Exception e){
+        } catch (Exception e) {
             printOfServer("Server Error, please contact system admin");
         }
     }
 
     private boolean assignListenPort(Message message, InetAddress inetAddress, Socket client) {
+        printOfServer("method");
         if (userPortStorage.containsUser(message.getSender()) == false && message.getSender().contains("Server") == false) {
             int assignedPort = generateUniqueRandomNumber();
+            printOfServer("if 1");
             if (syncUserPortStorage(message.getSender(), inetAddress, assignedPort)) {
+                printOfServer("if 1 1");
                 printOfServer(Integer.toString(assignedPort));
+                //this.userPortStorage.print();
                 return true;
             } else {
                 return false;
             }
         } else if (userPortStorage.containsUser(message.getSender()) && inetAddress.equals(userPortStorage.getUser(message.getSender()).getInetAddress()) == false) {
+            printOfServer("if 2");
             if (syncUserInetAdress(message.getSender(), inetAddress, userPortStorage.getUser(message.getSender()).getPort())) {
+                printOfServer("if 2 1");
                 userPortStorage.getUser(message.getSender()).setInetAddress(message.getInetAddress());
+                //this.userPortStorage.print();
                 return true;
             } else {
                 return false;
             }
         }
+        printOfServer("true");
         return true;
     }
 
@@ -148,22 +160,22 @@ public class Server2 extends Thread {
         Message answer;
         int first = randomNumber();
         try {
-            new TCPConnection(serverAdress, partnerPorts.get(first)).sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).closeConnection();
+            new TCPConnection(serverAdress, partnerPorts.get(first)).sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort));
         } catch (Exception e) {
             try {
-                new TCPConnection(serverAdress, partnerPorts.get(getInverse(first))).sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).closeConnection();
+                new TCPConnection(serverAdress, partnerPorts.get(getInverse(first))).sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort));
             } catch (Exception e2) {
                 System.out.println("Sync failed" + e.getMessage());
                 return false;
             }
         }
         userPortStorage.getUser(sender).setInetAddress(inetAddress);
-        printOfServer("User Data synced");
+        printOfServer("User Data synced inet");
         return true;
     }
 
     private void handleClientCommands(String inputCommand, Message message, ObjectOutputStream out) throws IOException, ClassNotFoundException {
-        printOfServer(inputCommand);
+        printOfServer("inputCommand: " + inputCommand);
         switch (inputCommand) {
             case "GET":
                 if (getMessageStorrageFromOtherServer()) {
@@ -186,16 +198,19 @@ public class Server2 extends Thread {
             case "SYNC_USER":
                 if (this.userPortStorage.containsUser(message.getUsername())) {
                     if (this.userPortStorage.getUser(message.getUsername()).getInetAddress().equals(message.getInetAddress())) {
+                        printOfServer("inet passt");
                         out.writeObject(new Message(this.serverName, this.serverToken, message.getSender(), this.userPortStorage.getUser(message.getUsername()), "AVAILABLE"));
                     } else {
+                        printOfServer("inet passt net");
                         this.userPortStorage.getUser(message.getUsername()).setInetAddress(message.getInetAddress());
                         out.writeObject(new Message(this.serverName, this.serverToken, message.getSender(), this.userPortStorage.getUser(message.getUsername()), "AVAILABLE"));
                     }
                 } else {
+                    printOfServer("habs hinzugefügt");
                     this.userPortStorage.addUser(message.getUsername(), message.getInetAddress(), message.getPort());
                     out.writeObject(new Message(this.serverName, this.serverToken, message.getSender(), this.userPortStorage.getUser(message.getUsername()), "ADDED"));
                 }
-                this.userPortStorage.print();
+                //this.userPortStorage.print();
                 break;
             case "SYNC_MESSAGE":
                 printOfServer("DEMO: " + message.getMessage().getMessageText());
@@ -237,34 +252,26 @@ public class Server2 extends Thread {
 
     private boolean syncUserPortStorage(String sender, InetAddress inetAddress, int assignedPort) {
         Message answer;
-        TCPConnection myConnection;
-        int first = randomNumber();
-        try {
-            myConnection = new TCPConnection(serverAdress, partnerPorts.get(first));
-            answer = myConnection.sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).receiveAnswer();
-        } catch (Exception e) {
+        TCPConnection connection = getConnection(0);
+        if (connection != null) {
             try {
-                myConnection = new TCPConnection(serverAdress, partnerPorts.get(getInverse(first)));
-                answer = myConnection.sendMessage(new Message(this.serverName, serverToken, "Server1", sender, inetAddress, assignedPort)).receiveAnswer();
-            } catch (Exception e2) {
+                answer = connection.sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort)).receiveAnswer();
+                if (answer.getStatus().equals("AVAILABLE")) {
+                    printOfServer("AV");
+                    userPortStorage.addUser(sender, answer.getInetAddress(), answer.getPort());
+                } else if (answer.getStatus().equals("ADDED")) {
+                    printOfServer("ADDED");
+                    userPortStorage.addUser(sender, inetAddress, assignedPort);
+                }
+                printOfServer("User Data synced");
+                return true;
+            } catch (Exception e) {
                 System.out.println("Sync failed" + e.getMessage());
-                return false;
             }
+        } else {
+            System.out.println("Sync failed");
         }
-
-        if (answer.getStatus().equals("AVAILABLE")) {
-            userPortStorage.addUser(sender, answer.getInetAddress(), answer.getPort());
-        } else if (answer.getStatus().equals("ADDED")) {
-            userPortStorage.addUser(sender, inetAddress, assignedPort);
-        }
-        printOfServer("User Data synced");
-        try {
-            myConnection.closeConnection();
-
-        } catch (Exception e) {
-            e.getMessage();
-        }
-        return true;
+        return false;
     }
 
     private void sendMessageToReceiver(Message message) {

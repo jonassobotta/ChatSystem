@@ -167,4 +167,7 @@ public class ClientLogic2 {
             return null;
         }
     }
+    public ClientLogic2 getInstance(){
+        return new ClientLogic2(this.chatUI);
+    }
 }

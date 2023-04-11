@@ -73,6 +73,10 @@ public class ChatUI extends JFrame {
                 System.out.println("logout pls");
                 passwordField.setText("");
                 usernameField.setText("");
+                clientLogic.setReceiver("");
+                clientLogic.setPassword("");
+                clientLogic.setUsername("");
+                clientLogic = clientLogic.getInstance();
                 CardLayout cl = (CardLayout) panelCards.getLayout();
                 cl.show(panelCards, "Login");
 
