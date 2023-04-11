@@ -1,5 +1,6 @@
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,10 +32,12 @@ public class UserStorage implements Serializable {
     public static class Body implements Serializable {
         private InetAddress inetAddress;
         private int port;
+        private long timestamp;
 
         public Body(InetAddress inetAddress, int port) {
             this.inetAddress = inetAddress;
             this.port = port;
+            this.timestamp = System.currentTimeMillis();
         }
 
         public InetAddress getInetAddress() {
@@ -43,6 +46,9 @@ public class UserStorage implements Serializable {
 
         public int getPort() {
             return port;
+        }
+        public long getTimestamp(){
+            return this.timestamp;
         }
 
         public void setInetAddress(InetAddress inetAddress) {

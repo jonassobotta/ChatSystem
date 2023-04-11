@@ -78,7 +78,7 @@ public class Server2 extends Thread {
                         out.writeObject(new Message("FAILED"));
                     } else {
                         //assign listen port to user
-                        if ( message.getSender().contains("Server") || assignListenPort(message, clientSocket.getInetAddress(), clientSocket)) {
+                        if (message.getSender().contains("Server") || assignListenPort(message, clientSocket.getInetAddress(), clientSocket)) {
                             //handel commands of user
                             handleClientCommands(message.getStatus(), message, out);
                         } else {
@@ -152,11 +152,11 @@ public class Server2 extends Thread {
                 }
                 break;
             case "SEND":
-                if(syncServerMessageStorage(message)){
+                if (syncServerMessageStorage(message)) {
                     this.messageStorage.addMessage(message);
                     sendMessageToReceiver(message);
                     out.writeObject(new Message("OK"));
-                }else {
+                } else {
                     out.writeObject(new Message("CONNECTION_ERROR"));
                 }
                 break;
@@ -181,6 +181,9 @@ public class Server2 extends Thread {
                 break;
             case "SYNC_MESSAGE_STORAGE":
                 out.writeObject(new Message(this.serverName, this.serverToken, "OK", this.messageStorage, this.userPortStorage));
+                break;
+            case "READ_USER":
+                out.writeObject(new Message(this.userPortStorage));
                 break;
             case "REBOOT":
                 out.writeObject(new Message(this.serverName, this.serverToken, "OK", this.messageStorage, this.userPortStorage));
@@ -245,7 +248,12 @@ public class Server2 extends Thread {
         new Thread(() -> {
             try {
                 UserStorage.Body user;
-                if ((user = userPortStorage.getUser(message.getReciver())) != null) {
+                TCPConnection connection = getConnection(0);
+                Message answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "READ_USER")).receiveAnswer();
+                connection.closeConnection();
+                UserStorage buffer = this.userPortStorage;
+                buffer.join(answer.getUserStorage());
+                if ((user = buffer.getUser(message.getReciver())) != null) {
                     printOfServer("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
 
                     new TCPConnection(user.getInetAddress().toString().substring(1), user.getPort()).sendMessage(message).closeConnection();
@@ -261,19 +269,19 @@ public class Server2 extends Thread {
     }
 
     private boolean syncServerMessageStorage(Message message) {
-        int first = randomNumber();
-        try {
-            new TCPConnection(serverAdress, partnerPorts.get(first)).sendMessage(new Message("Server1", serverToken, "Server2", message)).closeConnection();
-        } catch (Exception e) {
+        TCPConnection connection = getConnection(0);
+        if (connection == null) {
+            System.out.println("Sync failed");
+            return false;
+        } else {
             try {
-                new TCPConnection(serverAdress, partnerPorts.get(getInverse(first))).sendMessage(new Message("Server1", serverToken, "Server2", message)).closeConnection();
-            } catch (Exception e2) {
-                System.out.println("Sync failed" + e.getMessage());
+                connection.sendMessage(new Message(this.serverName, serverToken, "Server2", message)).closeConnection();
+            } catch (IOException e) {
+                System.out.println("Sync failed");
                 return false;
             }
         }
         return true;
-
     }
 
     public int generateUniqueRandomNumber() {
@@ -293,12 +301,31 @@ public class Server2 extends Thread {
     public void printOfServer(String printText) {
         System.out.println(this.serverAdress + ":" + this.serverPort + " -> " + printText);
     }
+
     public static int randomNumber() {
         Random random = new Random();
         int randomNumber = random.nextInt(2);
         return randomNumber;
     }
+
     public static int getInverse(int i) {
         return (i + 1) % 2;
+    }
+
+    public TCPConnection getConnection(int index) {
+        if (index == 5) return null;
+        TCPConnection myConnection;
+        int first = randomNumber();
+        try {
+            myConnection = new TCPConnection(serverAdress, partnerPorts.get(first));
+            return myConnection;
+        } catch (Exception e) {
+            try {
+                myConnection = new TCPConnection(serverAdress, partnerPorts.get(getInverse(first)));
+                return myConnection;
+            } catch (Exception e2) {
+                return getConnection(index + 1);
+            }
+        }
     }
 }

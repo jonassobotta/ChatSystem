@@ -7,11 +7,6 @@ public class Message  implements Serializable {
     private String sender;
     private String reciver;
     private String messageText;
-
-    public UserStorage getUserStorage() {
-        return userStorage;
-    }
-
     private String token;
     private String status;
     private long timestamp;
@@ -53,7 +48,6 @@ public class Message  implements Serializable {
         this.body = body;
         this.status = status;
     }
-
     //first server answer
     public Message(MessageStorage msgList, String status, int port) {
         this.messageStorage = msgList;
@@ -70,16 +64,10 @@ public class Message  implements Serializable {
         this.status = "SEND";
         this.timestamp = System.currentTimeMillis();
     }
-
-    public InetAddress getInetAddress() {
-        return inetAddress;
-    }
-
     public Message(String status) {
         this.status = status;
         this.timestamp = System.currentTimeMillis();
     }
-
     public Message(String sender, String token, String status, MessageStorage msgList, UserStorage userStorage){
         this.sender = sender;
         this.token = token;
@@ -87,12 +75,12 @@ public class Message  implements Serializable {
         this.messageStorage = msgList;
         this.userStorage = userStorage;
     }
-
-
+    public Message(UserStorage userStorage){
+        this.userStorage = userStorage;
+    }
     public MessageStorage getMessageStorage(){
         return this.messageStorage;
     }
-
     public long getTimestamp(){
         return this.timestamp;
     }
@@ -102,27 +90,29 @@ public class Message  implements Serializable {
     public String getStatus(){
         return this.status;
     }
-
     public int getPort(){
         return this.port;
     }
     public String getToken() {
         return token;
     }
-
     public String getSender() {
         return sender;
     }
-
     public String getReciver() {
         return reciver;
     }
-
     public String getMessageText() {
         return messageText;
     }
     public Message getMessage(){
         return this.message;
+    }
+    public InetAddress getInetAddress() {
+        return inetAddress;
+    }
+    public UserStorage getUserStorage() {
+        return userStorage;
     }
 
 }
