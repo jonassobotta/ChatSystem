@@ -15,16 +15,17 @@ public class Server2 extends Thread {
     private ArrayList<Integer> partnerPorts;
     private Set<Integer> usedNumbers = new HashSet<>();
     private final String serverToken = "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa";
+    private String startStatus;
 
     public static void main(String[] args) throws Exception {
         // Set the port number for the server
-        new Server2(7777).start();
-        new Server2(8888).start();
-        new Server2(9999).start();
+        new Server2(7777, "START").start();
+        new Server2(8888, "START").start();
+        new Server2(9999, "START").start();
 
     }
 
-    public Server2(int serverPort) {
+    public Server2(int serverPort, String startStatus) {
         partnerPorts = new ArrayList<>();
         partnerPorts.add(7777);
         partnerPorts.add(8888);
@@ -52,7 +53,9 @@ public class Server2 extends Thread {
             // Create a server socket
             ServerSocket serverSocket = new ServerSocket(serverPort);
             printOfServer("Server listening on port " + serverPort);
-
+            if (this.startStatus == "REBOOT") {
+                dannIssesSo();
+            }
             while (true) {
                 // Accept incoming client connections
                 Socket clientSocket = serverSocket.accept();
@@ -98,6 +101,26 @@ public class Server2 extends Thread {
             }
         } catch (Exception e) {
             printOfServer("Error: " + e.getMessage());
+        }
+    }
+
+    private void dannIssesSo() {
+        try {
+            TCPConnection server1 = new TCPConnection(serverAdress, partnerPorts.get(0));
+            TCPConnection server2 = new TCPConnection(serverAdress, partnerPorts.get(1));
+
+            Message answer1 = server1.sendMessage(new Message(this.serverName, this.serverToken, "REBOOT")).receiveAnswer();
+            Message answer2 = server2.sendMessage(new Message(this.serverName, this.serverToken, "REBOOT")).receiveAnswer();
+
+            server1.closeConnection();
+            server2.closeConnection();
+
+            this.messageStorage.join(answer1.getMessageStorage());
+            this.messageStorage.join(answer2.getMessageStorage());
+            this.userPortStorage.join(answer1.getUserStorage());
+            this.userPortStorage.join(answer2.getUserStorage());
+        }catch (Exception e){
+            printOfServer("Server Error, please contact system admin");
         }
     }
 
@@ -249,18 +272,20 @@ public class Server2 extends Thread {
             try {
                 UserStorage.Body user;
                 TCPConnection connection = getConnection(0);
-                Message answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "READ_USER")).receiveAnswer();
-                connection.closeConnection();
-                UserStorage buffer = this.userPortStorage;
-                buffer.join(answer.getUserStorage());
-                if ((user = buffer.getUser(message.getReciver())) != null) {
-                    printOfServer("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
+                if (connection != null) {
+                    Message answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "READ_USER")).receiveAnswer();
+                    connection.closeConnection();
+                    UserStorage buffer = this.userPortStorage;
+                    buffer.join(answer.getUserStorage());
+                    if ((user = buffer.getUser(message.getReciver())) != null) {
+                        printOfServer("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
 
-                    new TCPConnection(user.getInetAddress().toString().substring(1), user.getPort()).sendMessage(message).closeConnection();
+                        new TCPConnection(user.getInetAddress().toString().substring(1), user.getPort()).sendMessage(message).closeConnection();
 
-                    printOfServer("Forwarded Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
-                } else {
-                    printOfServer("Message from " + message.getSender() + " to " + message.getReciver() + "could not be forwarded due to missing information");
+                        printOfServer("Forwarded Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
+                    } else {
+                        printOfServer("Message from " + message.getSender() + " to " + message.getReciver() + "could not be forwarded due to missing information");
+                    }
                 }
             } catch (Exception e) {
                 printOfServer("send to receiver error: " + e.getMessage());
