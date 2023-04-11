@@ -5,12 +5,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class Server2 extends Thread {
-    private final String serverAdress = "192.168.178.29";
+    private final String serverAdress = "192.168.1.146";
     public int serverPort;
     public ArrayList<User> userList = new ArrayList<>();
     public MessageStorage messageStorage;
     private String serverName;
-    public UserStorage userPortStorage;
+    private UserStorage userPortStorage;
     private int partnerPort;
     private ArrayList<Integer> partnerPorts;
     private Set<Integer> usedNumbers = new HashSet<>();
@@ -260,9 +260,10 @@ public class Server2 extends Thread {
             try {
                 answer = connection.sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort)).receiveAnswer();
                 if (answer.getStatus().equals("AVAILABLE")) {
-                    printOfServer("AV" + answer.getInetAddress());
+                    //Hier ist es der Body der geholt werden muss und daraus dann die Daten, das habe ich geändert
+                    printOfServer("answer: " + answer.getBody().getInetAddress());
 
-                    userPortStorage.addUser(sender, answer.getInetAddress(), answer.getPort());
+                    userPortStorage.addUser(sender, answer.getBody().getInetAddress(), answer.getBody().getPort());
                 } else if (answer.getStatus().equals("ADDED")) {
                     printOfServer("ADDED");
                     userPortStorage.addUser(sender, inetAddress, assignedPort);
@@ -281,27 +282,29 @@ public class Server2 extends Thread {
     private void sendMessageToReceiver(Message message) {
         new Thread(() -> {
             try {
-                UserStorage.Body user;
+                UserStorage.Body userBody;
                 TCPConnection connection = getConnection(0);
                 if (connection != null) {
                     Message answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "READ_USER")).receiveAnswer();
                     connection.closeConnection();
                     UserStorage buffer = this.userPortStorage;
-
                     buffer.join(answer.getUserStorage());
-                    System.out.println();
+                    printOfServer("----Userport Storage von aktuellen Server ----");
                     this.userPortStorage.print();
+                    printOfServer("----answer Storage von anderem Server ----");
                     answer.getUserStorage();
-                    System.out.println();
+                    printOfServer("----buffer Storage von beiden Servern ----");
                     buffer.print();
-                    if ((user = buffer.getUser(message.getReciver())) != null) {
-                        printOfServer("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
+                    //Hier muss geguckt werden dass die inet nicht null ist ... einen body gibt er immer zurück
+                    userBody = buffer.getUser(message.getReciver());
+                    if ((userBody.getInetAddress()) != null) {
+                        printOfServer("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + userBody.getInetAddress().toString().substring(1) + ":" + userBody.getPort());
 
-                        new TCPConnection(user.getInetAddress().toString().substring(1), user.getPort()).sendMessage(message).closeConnection();
+                        new TCPConnection(userBody.getInetAddress().toString().substring(1), userBody.getPort()).sendMessage(message).closeConnection();
 
-                        printOfServer("Forwarded Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
+                        printOfServer("Forwarded Message from " + message.getSender() + " to " + message.getReciver() + " with address " + userBody.getInetAddress().toString().substring(1) + ":" + userBody.getPort());
                     } else {
-                        printOfServer("Message from " + message.getSender() + " to " + message.getReciver() + "could not be forwarded due to missing information");
+                        printOfServer("Message from " + message.getSender() + " to " + message.getReciver() + " could not be forwarded due to missing information");
                     }
                 }
             } catch (Exception e) {

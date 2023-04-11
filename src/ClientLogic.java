@@ -9,7 +9,7 @@ import java.util.TreeMap;
 
 public class ClientLogic {
     int[] serverPorts = {7777, 8888};
-    private final String serverAdress = "192.168.178.29";
+    private final String serverAdress = "192.168.1.146";
     private BufferedReader reader;
     private Socket socket = null;
     private ServerSocket serverSocket;

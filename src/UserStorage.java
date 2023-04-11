@@ -17,6 +17,7 @@ public class UserStorage implements Serializable {
         if(map.get(username) != null){
             return map.get(username);
         }else {
+            System.out.println("der username wo ein leerer body erstellt wird ist " + username);
             System.out.println("hier wird das aufgrufen: " + Thread.currentThread().getStackTrace());
             return new Body(null, -1);
         }
@@ -82,7 +83,11 @@ public class UserStorage implements Serializable {
     public void print() {
         for (String username : map.keySet()) {
             Body body = map.get(username);
-            System.out.println(username + ": " + body.getInetAddress().getHostAddress() + ":" + body.getPort());
+            if(body.getInetAddress() != null){
+                System.out.println(username + ": " + body.getInetAddress().getHostAddress() + ":" + body.getPort());
+            }else {
+                System.out.println(username + "als username hat einen empty body");
+            }
         }
     }
 

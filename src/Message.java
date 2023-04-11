@@ -114,5 +114,7 @@ public class Message  implements Serializable {
     public UserStorage getUserStorage() {
         return userStorage;
     }
-
+public UserStorage.Body getBody() {
+        return body;
+    }
 }
