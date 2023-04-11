@@ -78,7 +78,8 @@ public class Server2 extends Thread {
                     //ad user port to list
                     if (message.getReciver() != null && message.getReciver().equals(message.getSender())) {
                         //report error if sender and receiver are the same user
-                        printOfServer("hilfe: rec:" + (message.getReciver() != null )+ " oder: " + message.getReciver().equals(message.getSender()));
+                        printOfServer(message.getReciver());
+                        printOfServer("hilfe: rec:" + (message.getReciver() != null) + " oder: " + message.getReciver().equals(message.getSender()));
                         out.writeObject(new Message("FAILED"));
                     } else {
                         //assign listen port to user
@@ -141,11 +142,11 @@ public class Server2 extends Thread {
             } else {
                 return false;
             }
-        } else if (userPortStorage.containsUser(message.getSender()) && inetAddress.equals(userPortStorage.getUser(message.getSender()).getInetAddress()) == false) {
+        } else if (userPortStorage.containsUser(message.getSender()) && inetAddress.equals(userPortStorage.getUser(message.getSender()).getInetAddress()) == false && message.getSender().contains("Server") == false) {
             printOfServer("if 2");
             if (syncUserInetAdress(message.getSender(), inetAddress, userPortStorage.getUser(message.getSender()).getPort())) {
                 printOfServer("if 2 1");
-                userPortStorage.getUser(message.getSender()).setInetAddress(message.getInetAddress());
+                //userPortStorage.getUser(message.getSender()).setInetAddress(message.getInetAddress());
                 //this.userPortStorage.print();
                 return true;
             } else {
@@ -157,21 +158,21 @@ public class Server2 extends Thread {
     }
 
     private boolean syncUserInetAdress(String sender, InetAddress inetAddress, int assignedPort) {
-        Message answer;
-        int first = randomNumber();
+        TCPConnection connection = getConnection(0);
         try {
-            new TCPConnection(serverAdress, partnerPorts.get(first)).sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort));
+
+            printOfServer("huhu: " + sender + ":" + inetAddress + ":" + assignedPort);
+
+            connection.sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort));
+            userPortStorage.getUser(sender).setInetAddress(inetAddress);
+            printOfServer("User Data synced inet");
+            return true;
         } catch (Exception e) {
-            try {
-                new TCPConnection(serverAdress, partnerPorts.get(getInverse(first))).sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort));
-            } catch (Exception e2) {
-                System.out.println("Sync failed" + e.getMessage());
-                return false;
-            }
+            System.out.println("Sync failed" + e.getMessage());
+            return false;
         }
-        userPortStorage.getUser(sender).setInetAddress(inetAddress);
-        printOfServer("User Data synced inet");
-        return true;
+
+
     }
 
     private void handleClientCommands(String inputCommand, Message message, ObjectOutputStream out) throws IOException, ClassNotFoundException {
@@ -197,6 +198,8 @@ public class Server2 extends Thread {
                 break;
             case "SYNC_USER":
                 if (this.userPortStorage.containsUser(message.getUsername())) {
+                    System.out.println(this.userPortStorage.getUser(message.getUsername()).getInetAddress());
+                    System.out.println(message.getUsername());
                     if (this.userPortStorage.getUser(message.getUsername()).getInetAddress().equals(message.getInetAddress())) {
                         printOfServer("inet passt");
                         out.writeObject(new Message(this.serverName, this.serverToken, message.getSender(), this.userPortStorage.getUser(message.getUsername()), "AVAILABLE"));
@@ -257,7 +260,8 @@ public class Server2 extends Thread {
             try {
                 answer = connection.sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort)).receiveAnswer();
                 if (answer.getStatus().equals("AVAILABLE")) {
-                    printOfServer("AV");
+                    printOfServer("AV" + answer.getInetAddress());
+
                     userPortStorage.addUser(sender, answer.getInetAddress(), answer.getPort());
                 } else if (answer.getStatus().equals("ADDED")) {
                     printOfServer("ADDED");
@@ -283,7 +287,13 @@ public class Server2 extends Thread {
                     Message answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "READ_USER")).receiveAnswer();
                     connection.closeConnection();
                     UserStorage buffer = this.userPortStorage;
+
                     buffer.join(answer.getUserStorage());
+                    System.out.println();
+                    this.userPortStorage.print();
+                    answer.getUserStorage();
+                    System.out.println();
+                    buffer.print();
                     if ((user = buffer.getUser(message.getReciver())) != null) {
                         printOfServer("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
 
@@ -307,7 +317,8 @@ public class Server2 extends Thread {
             return false;
         } else {
             try {
-                connection.sendMessage(new Message(this.serverName, serverToken, "Server2", message)).closeConnection();
+                System.out.println("dsfgfhds");
+                connection.sendMessage(new Message(this.serverName, serverToken, "Server", message)).closeConnection();
             } catch (IOException e) {
                 System.out.println("Sync failed");
                 return false;

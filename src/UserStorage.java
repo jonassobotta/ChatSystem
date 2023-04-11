@@ -1,5 +1,6 @@
 import java.io.Serializable;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ public class UserStorage implements Serializable {
         if(map.get(username) != null){
             return map.get(username);
         }else {
+            System.out.println("hier wird das aufgrufen: " + Thread.currentThread().getStackTrace());
             return new Body(null, -1);
         }
     }
@@ -52,6 +54,7 @@ public class UserStorage implements Serializable {
         }
 
         public void setInetAddress(InetAddress inetAddress) {
+            System.out.println("setzte inet adress to: " + inetAddress);
             this.inetAddress = inetAddress;
         }
 
