@@ -84,19 +84,26 @@ public class UserStorage implements Serializable {
         for (String username : map.keySet()) {
             Body body = map.get(username);
             if(body.getInetAddress() != null){
-                System.out.println(username + ": " + body.getInetAddress().getHostAddress() + ":" + body.getPort());
+                System.out.println(username + ": " + body.getInetAddress().getHostAddress() + ":" + body.getPort() + " // "+ body.getTimestamp());
             }else {
                 System.out.println(username + "als username hat einen empty body");
             }
         }
     }
 
-    public void join(UserStorage other) {
+    public void join(UserStorage other) { //Falls bei Read User zwei server unterschiedliches inet adresse von einem user haben wird die neuste genommen
         for (String username : other.map.keySet()) {
-            if (!map.containsKey(username)) {
+            Body otherBody = other.map.get(username);
+            if (map.containsKey(username)) {
+                // User already exists in current storage, compare timestamps
+                Body currentBody = map.get(username);
+                if (otherBody.getTimestamp() > currentBody.getTimestamp()) {
+                    // If otherBody has a more recent timestamp, update it in current storage
+                    map.put(username, otherBody);
+                }
+            } else {
                 // User does not exist in current storage, add it
-                Body body = other.map.get(username);
-                map.put(username, body);
+                map.put(username, otherBody);
             }
         }
     }

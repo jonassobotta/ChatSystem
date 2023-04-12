@@ -5,7 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class Server2 extends Thread {
-    private final String serverAdress = "192.168.1.146";
+    private final String serverAdress = "192.168.178.29";
     public int serverPort;
     public ArrayList<User> userList = new ArrayList<>();
     public MessageStorage messageStorage;
@@ -16,6 +16,27 @@ public class Server2 extends Thread {
     private Set<Integer> usedNumbers = new HashSet<>();
     private final String serverToken = "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa";
     private String startStatus;
+    private ArrayList<PartnerServerList> partnerServerList;
+    private class PartnerServerList{
+        private int partnerPort;
+        private String inetAddress;
+        public PartnerServerList(String inetAddress, int partnerPort) {
+            this.partnerPort = partnerPort;
+            this.inetAddress = inetAddress;
+        }
+        public int getPartnerPort() {
+            return partnerPort;
+        }
+        public void setPartnerPort(int partnerPort) {
+            this.partnerPort = partnerPort;
+        }
+        public String getInetAddress() {
+            return inetAddress;
+        }
+        public void setInetAddress(String inetAddress) {
+            this.inetAddress = inetAddress;
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         // Set the port number for the server
@@ -35,6 +56,20 @@ public class Server2 extends Thread {
         usedNumbers.add(9999);
         this.partnerPort = serverPort == 7777 ? partnerPorts.remove(0) : serverPort == 8888 ? partnerPorts.remove(1) : partnerPorts.remove(2);
         this.serverName = serverPort == 7777 ? "Server1" : serverPort == 8888 ? "Server2" : "Server3";
+
+        this.partnerServerList = new ArrayList<>();
+        partnerServerList.add(new PartnerServerList("192.168.178.29", 7777));
+        partnerServerList.add(new PartnerServerList("192.168.178.29", 8888));
+        partnerServerList.add(new PartnerServerList("192.168.178.29", 9999));
+        
+        if(serverPort == 7777){
+            partnerServerList.remove(0);
+        } else if (serverPort == 8888) {
+            partnerServerList.remove(1);
+        }else{
+            partnerServerList.remove(2);
+        }
+
         this.userPortStorage = new UserStorage();
         this.messageStorage = new MessageStorage();
         this.serverPort = serverPort;
@@ -111,8 +146,8 @@ public class Server2 extends Thread {
 
     private void dannIssesSo() {
         try {
-            TCPConnection server1 = new TCPConnection(serverAdress, partnerPorts.get(0));
-            TCPConnection server2 = new TCPConnection(serverAdress, partnerPorts.get(1));
+            TCPConnection server1 = new TCPConnection(partnerServerList.get(0).getInetAddress(), partnerServerList.get(0).getPartnerPort());
+            TCPConnection server2 = new TCPConnection(partnerServerList.get(1).getInetAddress(), partnerServerList.get(1).getPartnerPort());
 
             Message answer1 = server1.sendMessage(new Message(this.serverName, this.serverToken, "REBOOT")).receiveAnswer();
             Message answer2 = server2.sendMessage(new Message(this.serverName, this.serverToken, "REBOOT")).receiveAnswer();
@@ -258,7 +293,7 @@ public class Server2 extends Thread {
         TCPConnection connection = getConnection(0);
         if (connection != null) {
             try {
-                answer = connection.sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort)).receiveAnswer();
+                answer = connection.sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort)).receiveAnswer(); // status: "SYNC_USER"
                 if (answer.getStatus().equals("AVAILABLE")) {
                     //Hier ist es der Body der geholt werden muss und daraus dann die Daten, das habe ich geändert
                     printOfServer("answer: " + answer.getBody().getInetAddress());
@@ -292,7 +327,7 @@ public class Server2 extends Thread {
                     printOfServer("----Userport Storage von aktuellen Server ----");
                     this.userPortStorage.print();
                     printOfServer("----answer Storage von anderem Server ----");
-                    answer.getUserStorage();
+                    answer.getUserStorage().print();
                     printOfServer("----buffer Storage von beiden Servern ----");
                     buffer.print();
                     //Hier muss geguckt werden dass die inet nicht null ist ... einen body gibt er immer zurück
@@ -308,7 +343,7 @@ public class Server2 extends Thread {
                     }
                 }
             } catch (Exception e) {
-                printOfServer("send to receiver error: " + e.getMessage());
+                printOfServer("send to receiver error: " + e.getMessage() + " -> user is offline");
             }
         }).start();
     }
@@ -363,11 +398,11 @@ public class Server2 extends Thread {
         TCPConnection myConnection;
         int first = randomNumber();
         try {
-            myConnection = new TCPConnection(serverAdress, partnerPorts.get(first));
+            myConnection = new TCPConnection(partnerServerList.get(first).getInetAddress(), partnerServerList.get(first).getPartnerPort());
             return myConnection;
         } catch (Exception e) {
             try {
-                myConnection = new TCPConnection(serverAdress, partnerPorts.get(getInverse(first)));
+                myConnection = new TCPConnection(partnerServerList.get(getInverse(first)).getInetAddress(), partnerServerList.get(getInverse(first)).getPartnerPort());
                 return myConnection;
             } catch (Exception e2) {
                 return getConnection(index + 1);
