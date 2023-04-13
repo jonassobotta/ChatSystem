@@ -7,19 +7,19 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeMap;
 
-public class ClientLogic2 {
+public class ClientLogic2 extends Thread {
     int[] serverPorts = {7777, 8888, 9999};
-    private final String serverAdress = "192.168.178.29";
+    public final String serverAdress = "192.168.178.29";
     private BufferedReader reader;
     private Socket socket = null;
-    private ServerSocket serverSocket;
+    public ServerSocket serverSocket;
     private String username;
     private String token;
     private String receiver;
-    private static int listenPort;
+    public int listenPort;
     private MessageStorage messageStorage;
     private ChatUI chatUI;
-
+    public String interrupt = "NO";
 
     public ClientLogic2(ChatUI chatUI) {
         try {
@@ -27,6 +27,7 @@ public class ClientLogic2 {
             this.reader = new BufferedReader(new InputStreamReader(System.in));
             this.listenPort = -1;
             this.messageStorage = new MessageStorage();
+
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -34,6 +35,10 @@ public class ClientLogic2 {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public String getUsername() {
+        return this.username;
     }
 
     public void setPassword(String password) {
@@ -53,40 +58,41 @@ public class ClientLogic2 {
         return messageStorage.getMessages(username, receiver);
     }
 
-    class Listener extends Thread {
-        public void run() {
-            System.out.println("Writer running");
-            //Hier broadcast verschicken
-            try {
-                //was da loooos
-                while (listenPort == -1) {
-                    sleep(1);
-                }
-                serverSocket = new ServerSocket(listenPort);
-                System.out.println("Listenserver created with port " + serverSocket.getLocalPort());
-                while (true) {
+    public void run() {
+        try {
+            while (listenPort == -1 && !Thread.currentThread().isInterrupted()) {
+                sleep(1);
+            }
+            System.out.println("test");
+            serverSocket = new ServerSocket(listenPort);
+            System.out.println("Listenserver created with port " + serverSocket.getLocalPort());
+            while (!Thread.currentThread().isInterrupted()) {
+                try{
                     Socket clientSocket = serverSocket.accept();
                     // Get input and output streams to communicate with the client
                     ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
                     ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
                     Message message = (Message) in.readObject();
-                    addMessageToHistory(message);
-                    chatUI.updateChatList();
-
+                    if(message.getStatus() != null && message.getStatus().equals("INTERRUPT")){
+                        this.interrupt();
+                        System.out.println("ghjklkjhgfghjklö");
+                    }else{
+                        addMessageToHistory(message);
+                        chatUI.updateChatList();
+                    }
                     in.close();
                     out.close();
                     clientSocket.close();
-
+                }catch (Exception e){
+                    System.out.println("server socket closed -> please interrupt Thread");
                 }
-            } catch (Exception e) {
-
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
     }
 
-    public void start() {
-        new Listener().start();
-    }
 
     public void addMessageToHistory(Message message) {
         this.messageStorage.addMessage(message);
@@ -167,7 +173,5 @@ public class ClientLogic2 {
             return null;
         }
     }
-    public ClientLogic2 getInstance(){
-        return new ClientLogic2(this.chatUI);
-    }
+
 }

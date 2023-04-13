@@ -17,17 +17,10 @@ public class UserStorage implements Serializable {
         if(map.get(username) != null){
             return map.get(username);
         }else {
-            System.out.println("der username wo ein leerer body erstellt wird ist " + username);
-            System.out.println("hier wird das aufgrufen: " + Thread.currentThread().getStackTrace());
             return new Body(null, -1);
         }
     }
 
-    public void removeUser(String username) {
-        map.remove(username);
-    }
-
-    //TODO: abfragen nach inet und user damit multiple device für einen nutzer möglich
     public boolean containsUser(String username) {
         return map.containsKey(username);
     }
@@ -120,6 +113,4 @@ public class UserStorage implements Serializable {
     public int hashCode() {
         return map.hashCode();
     }
-
-
 }

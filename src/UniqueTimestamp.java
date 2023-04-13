@@ -18,4 +18,5 @@ public class UniqueTimestamp implements Comparable<UniqueTimestamp>, Serializabl
         }
         return compare;
     }
+
 }

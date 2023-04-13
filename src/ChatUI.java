@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
+
 public class ChatUI extends JFrame {
     private JPanel panelCards;
     private JPanel headerPanel;
@@ -20,12 +21,15 @@ public class ChatUI extends JFrame {
     //private ClientLogic clientLogic;
     private ClientLogic2 clientLogic;
     private String currentChatPartner;
+    private ChatUI ownInstance;
 
     public ChatUI() {
+        this.ownInstance = this;
+
         //clientLogic = new ClientLogic(this);
         clientLogic = new ClientLogic2(this);
-
         clientLogic.start();
+
         // Set the size and title of the JFrame
         setSize(400, 300);
         setTitle("Chat Application");
@@ -54,7 +58,7 @@ public class ChatUI extends JFrame {
         panelChatList.add(labelChatList, BorderLayout.NORTH);
 
         JPanel panelHeader = new JPanel(new BorderLayout());
-        JLabel labelHeader = new JLabel("Chats");
+        JLabel labelHeader = new JLabel("Chats von: ");
         panelHeader.add(labelHeader, BorderLayout.WEST);
         panelChatList.add(panelHeader, BorderLayout.NORTH);
 
@@ -76,7 +80,15 @@ public class ChatUI extends JFrame {
                 clientLogic.setReceiver("");
                 clientLogic.setPassword("");
                 clientLogic.setUsername("");
-                clientLogic = clientLogic.getInstance();
+
+                try {
+                    clientLogic.serverSocket.close();
+                    clientLogic.interrupt();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+                clientLogic = new ClientLogic2(ownInstance);
+                clientLogic.start();
                 CardLayout cl = (CardLayout) panelCards.getLayout();
                 cl.show(panelCards, "Login");
 
@@ -96,7 +108,12 @@ public class ChatUI extends JFrame {
 
                 if (result == JOptionPane.OK_OPTION) {
                     String newChat = textField.getText();
-                    if (!chats.contains(newChat)) {
+                    if (chats.contains(newChat)) {
+                        showChatAlreadyExistsPopup();
+                    }else if(clientLogic.getUsername().equals(newChat)){
+                        showMessageToOwnNamePopup();
+                    }
+                    else{
                         chats.add(newChat);
                         chatList.setListData(chats.toArray(new String[0]));
                     }
@@ -177,6 +194,8 @@ public class ChatUI extends JFrame {
                     System.out.println(stateOfConnection);
                     if (stateOfConnection.equals("OK")) {
                         //weiter
+                        JLabel labelHeaderUserName = new JLabel(username);
+                        panelHeader.add(labelHeaderUserName, BorderLayout.CENTER);
                         chats = clientLogic.getAllChatPartners(username);
                         chatList.setListData(chats.toArray(new String[0]));
                         CardLayout cl = (CardLayout) panelCards.getLayout();
@@ -191,7 +210,6 @@ public class ChatUI extends JFrame {
                 } catch (Exception error) {
                     System.out.println(error.getMessage());
                 }
-                // TODO: Perform login validation
             }
         });
 
@@ -211,16 +229,20 @@ public class ChatUI extends JFrame {
         setVisible(true);
     }
 
-    private String username = "joel";
-
     private void showInvalidPasswordPopup() {
         JOptionPane.showMessageDialog(this, "Invalid password. Please try again.", "Login Error", JOptionPane.ERROR_MESSAGE);
+    }
+    private void showMessageToOwnNamePopup() {
+        JOptionPane.showMessageDialog(this, "Messages to your self is not possible", "Chat Error", JOptionPane.ERROR_MESSAGE);
+    }
+    private void showChatAlreadyExistsPopup() {
+        JOptionPane.showMessageDialog(this, "Chat already exists", "Chat Error", JOptionPane.ERROR_MESSAGE);
     }
     private void showBadConnectionPopup() {
         JOptionPane.showMessageDialog(this, "Bad Connection, try again later", "Connection Error", JOptionPane.ERROR_MESSAGE);
     }
     public void updateChatList(){
-        chats = clientLogic.getAllChatPartners(username);
+        chats = clientLogic.getAllChatPartners(clientLogic.getUsername());
         chatList.setListData(chats.toArray(new String[0]));
     }
     private void openChat(String chatPartner) {
@@ -241,7 +263,7 @@ public class ChatUI extends JFrame {
     }
 
     public void initializeChatView() {
-        if (currentChatPartner != null){
+        if (currentChatPartner != null) {
             TreeMap<UniqueTimestamp, Message> messages = clientLogic.printHistoryOfChat(currentChatPartner);
             JTextArea chatTextArea = (JTextArea) ((JScrollPane) panelChatView.getComponent(1)).getViewport().getView();
             chatTextArea.setText("");
@@ -249,14 +271,17 @@ public class ChatUI extends JFrame {
                 for (Map.Entry<UniqueTimestamp, Message> entry : messages.entrySet()) {
                     Message message = entry.getValue();
                     String sender = message.getSender();
+                    if(sender.equals(clientLogic.getUsername())){
+                        sender= "Ich";
+                    }
                     String messageText = message.getMessageText();
-                    chatTextArea.append(sender + ": " + messageText + "\n");
+                    String messageTime = message.getFormatChatMessageTime();
+                    chatTextArea.append("(" + messageTime + ")" + " " + sender + ": " + messageText + "\n");
                     System.out.println(messageText);
                 }
             }
         }
     }
-
 
     public static void main(String[] args) {
         new ChatUI();
