@@ -14,7 +14,7 @@ public class Server2 extends Thread {
     public MessageStorage messageStorage;
     private UserStorage userPortStorage;
 
-    private class PartnerServerList {
+    public class PartnerServerList {
         private int partnerPort;
         private String inetAddress;
 
@@ -44,7 +44,7 @@ public class Server2 extends Thread {
         // Set the port number for the server
         new Server2("Server1", "START").start();
         new Server2("Server2", "START").start();
-        new Server2("Server3", "START").start();
+        //new Server2("Server3", "START").start();
 
     }
 
@@ -57,7 +57,7 @@ public class Server2 extends Thread {
         this.partnerServerList = new ArrayList<>();
         this.partnerServerList.add(new PartnerServerList("192.168.178.29", 7777));
         this.partnerServerList.add(new PartnerServerList("192.168.178.29", 8888));
-        this.partnerServerList.add(new PartnerServerList("192.168.178.29", 9999));
+        this.partnerServerList.add(new PartnerServerList("192.168.178.81", 9999));
 
         //save used ports by servers
         this.usedPorts = new HashSet<>();

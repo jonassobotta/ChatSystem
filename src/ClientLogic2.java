@@ -10,6 +10,7 @@ import java.util.TreeMap;
 public class ClientLogic2 extends Thread {
     int[] serverPorts = {7777, 8888, 9999};
     public final String serverAdress = "192.168.178.29";
+    private ArrayList<PartnerServerList> partnerServerList;
     private BufferedReader reader;
     private Socket socket = null;
     public ServerSocket serverSocket;
@@ -21,13 +22,41 @@ public class ClientLogic2 extends Thread {
     private ChatUI chatUI;
     public String interrupt = "NO";
 
+    public class PartnerServerList {
+        private int partnerPort;
+        private String inetAddress;
+
+        public PartnerServerList(String inetAddress, int partnerPort) {
+            this.partnerPort = partnerPort;
+            this.inetAddress = inetAddress;
+        }
+
+        public int getPartnerPort() {
+            return partnerPort;
+        }
+
+        public void setPartnerPort(int partnerPort) {
+            this.partnerPort = partnerPort;
+        }
+
+        public String getInetAddress() {
+            return inetAddress;
+        }
+
+        public void setInetAddress(String inetAddress) {
+            this.inetAddress = inetAddress;
+        }
+    }
     public ClientLogic2(ChatUI chatUI) {
+        this.partnerServerList = new ArrayList<>();
+        this.partnerServerList.add(new PartnerServerList("192.168.178.29", 7777));
+        this.partnerServerList.add(new PartnerServerList("192.168.178.29", 8888));
+        this.partnerServerList.add(new PartnerServerList("192.168.178.81", 9999));
         try {
             this.chatUI = chatUI;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
             this.listenPort = -1;
             this.messageStorage = new MessageStorage();
-
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
@@ -137,7 +166,8 @@ public class ClientLogic2 extends Thread {
             return new Message("FAILED");
         }
         try {
-            socket = new Socket(serverAdress, serverPorts[randomNumber()]);
+            int randomNumber = randomNumber();
+            socket = new Socket(partnerServerList.get(randomNumber).getInetAddress(), partnerServerList.get(randomNumber).getPartnerPort());
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
             out.writeObject(message);
