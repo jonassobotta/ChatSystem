@@ -1,13 +1,15 @@
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 public class TCPConnection {
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
     public TCPConnection(String serverAddress, int port) throws IOException {
-        this.socket = new Socket(serverAddress, port);
+        this.socket = new Socket();
+        socket.connect(new InetSocketAddress(serverAddress, port), 1000);
         this.out = new ObjectOutputStream(this.socket.getOutputStream());
         this.in = new ObjectInputStream(this.socket.getInputStream());
     }

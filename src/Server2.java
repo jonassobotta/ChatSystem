@@ -2,62 +2,26 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-public class Server2 extends Thread {
-    private String serverName;
-    private String serverAddress;
-    public int serverPort;
-    private final String serverToken = "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa";
+public class Server2 extends Server {
     private String startStatus;
-    private ArrayList<PartnerServerList> partnerServerList;
-    private Set<Integer> usedPorts;
-    public ArrayList<User> userList;
-    public MessageStorage messageStorage;
-    private UserStorage userPortStorage;
-
-    public class PartnerServerList {
-        private int partnerPort;
-        private String inetAddress;
-
-        public PartnerServerList(String inetAddress, int partnerPort) {
-            this.partnerPort = partnerPort;
-            this.inetAddress = inetAddress;
-        }
-
-        public int getPartnerPort() {
-            return partnerPort;
-        }
-
-        public void setPartnerPort(int partnerPort) {
-            this.partnerPort = partnerPort;
-        }
-
-        public String getInetAddress() {
-            return inetAddress;
-        }
-
-        public void setInetAddress(String inetAddress) {
-            this.inetAddress = inetAddress;
-        }
-    }
+    private ArrayList<ConnectionInetPortList> partnerServerList;
 
     public static void main(String[] args) throws Exception {
         // Set the port number for the server
         new Server2("Server1", "START").start();
         new Server2("Server2", "START").start();
-        //new Server2("Server3", "START").start();
-
+        new Server2("Server3", "START").start();
     }
 
     public Server2(String serverName, String startStatus) {
-
-        this.serverName = serverName;
+        super(serverName);
         this.startStatus = startStatus;
 
         //setup all partner server
         this.partnerServerList = new ArrayList<>();
-        this.partnerServerList.add(new PartnerServerList("192.168.178.29", 7777));
-        this.partnerServerList.add(new PartnerServerList("192.168.178.29", 8888));
-        this.partnerServerList.add(new PartnerServerList("192.168.178.81", 9999));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 9999));
 
         //save used ports by servers
         this.usedPorts = new HashSet<>();
@@ -79,26 +43,20 @@ public class Server2 extends Thread {
             this.serverPort = partnerServerList.get(2).getPartnerPort();
             this.partnerServerList.remove(2);
         }
+    }
 
-        //initialize storage components
-        this.userPortStorage = new UserStorage();
-        this.messageStorage = new MessageStorage();
-
-        //initialize and setup user with password and token
-        this.userList = new ArrayList<>();
-        userList.add(new User("joel", "f11a60c74bca3ace583fac190409a5c32f83e61e1d2f7097de9674ad2c4ea877"));//Passwort ist JoelPw
-        userList.add(new User("jonas", "1c461504c316958f1b46ce6f387dde8981ee548572a682a69abf708ecb3ca94c"));//Passwort ist JonasPw
-        userList.add(new User("luca", "bb525174242421707805642da8e45a984bcef043ed6235476d00e9b626ae520d"));//Passwort ist LucaPw
-        userList.add(new User("sarah", "be069a5e1fc5c8e3117cbb51ba554403a75d15545a735b09480cb4de5c3fdf3e"));//Passwort ist SarahPw
-        userList.add(new User("Server1", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));//Passwort ist joel
-        userList.add(new User("Server2", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));//Passwort ist joel
-        userList.add(new User("Server3", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));//Passwort ist joel
+    public void stopServer() {
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void run() {
 
         try {
-            ServerSocket serverSocket = new ServerSocket(serverPort);
+            serverSocket = new ServerSocket(serverPort);
             printOfServer("Server listening on port " + serverPort);
 
             //reboot option, if server crashed and need to sync with the majority of the serverlist
@@ -153,12 +111,17 @@ public class Server2 extends Thread {
                 if (message.getSender().contains("Server") == false) System.out.println();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(serverName + ": Error " + e.getMessage() + " -> shutdown");
         }
+
     }
 
     private void serverReconnection() {
-        try {
+
+        this.messageStorage = MessageStorage.readFromTextFile(this.serverName);
+        this.userPortStorage = UserStorage.readFromTextFile(this.serverName);
+
+        /*try {
             TCPConnection server1 = new TCPConnection(partnerServerList.get(0).getInetAddress(), partnerServerList.get(0).getPartnerPort());
             TCPConnection server2 = new TCPConnection(partnerServerList.get(1).getInetAddress(), partnerServerList.get(1).getPartnerPort());
 
@@ -170,11 +133,14 @@ public class Server2 extends Thread {
 
             this.messageStorage.join(answer1.getMessageStorage());
             this.messageStorage.join(answer2.getMessageStorage());
+            this.messageStorage.print();
             this.userPortStorage.join(answer1.getUserStorage());
             this.userPortStorage.join(answer2.getUserStorage());
+            this.userPortStorage.print();
+            printOfServer("reboot successful");
         } catch (Exception e) {
             printOfServer("Server Error, please contact system admin");
-        }
+        }*/
     }
 
     private boolean assignListenPort(Message message, InetAddress inetAddress, Socket client) {
@@ -206,11 +172,9 @@ public class Server2 extends Thread {
             System.out.println("Sync failed" + e.getMessage());
             return false;
         }
-
-
     }
 
-    private void handleClientCommands(String inputCommand, Message message, ObjectOutputStream out) throws IOException, ClassNotFoundException {
+    private void handleClientCommands(String inputCommand, Message message, ObjectOutputStream out) throws IOException {
         printOfServer("input command: " + inputCommand);
         switch (inputCommand) {
             case "GET":
@@ -224,7 +188,7 @@ public class Server2 extends Thread {
                 break;
             case "SEND":
                 if (syncServerMessageStorage(message)) {
-                    this.messageStorage.addMessage(message);
+                    this.messageStorage.addMessage(message, this.serverName);
                     sendMessageToReceiver(message);
                     out.writeObject(new Message("OK"));
                 } else {
@@ -242,13 +206,13 @@ public class Server2 extends Thread {
                         printOfServer("user information with different InetAddress -> changed InetAddress and sent back");
                     }
                 } else {
-                    this.userPortStorage.addUser(message.getUsername(), message.getInetAddress(), message.getPort());
+                    this.userPortStorage.addUser(message.getUsername(), message.getInetAddress(), message.getPort(), this.serverName);
                     out.writeObject(new Message(this.serverName, this.serverToken, message.getSender(), this.userPortStorage.getUser(message.getUsername()), "ADDED"));
                     printOfServer("no user information found -> added user Information and sent back");
                 }
                 break;
             case "SYNC_MESSAGE":
-                this.messageStorage.addMessage(message.getMessage());
+                this.messageStorage.addMessage(message.getMessage(), this.serverName);
                 printOfServer("added message to storage");
                 break;
             case "SYNC_MESSAGE_STORAGE":
@@ -262,6 +226,7 @@ public class Server2 extends Thread {
             case "REBOOT":
                 out.writeObject(new Message(this.serverName, this.serverToken, "OK", this.messageStorage, this.userPortStorage));
                 printOfServer("sent all storage content to " + message.getSender());
+                break;
             default:
                 out.writeObject(new Message("FAILED"));
                 printOfServer("not able to handle command from " + message.getSender());
@@ -288,10 +253,10 @@ public class Server2 extends Thread {
             try {
                 answer = connection.sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort)).receiveAnswer(); // status: "SYNC_USER"
                 if (answer.getStatus().equals("AVAILABLE")) {
-                    userPortStorage.addUser(sender, answer.getBody().getInetAddress(), answer.getBody().getPort());
+                    userPortStorage.addUser(sender, answer.getBody().getInetAddress(), answer.getBody().getPort(), this.serverName);
                     printOfServer("user data synced with port " + answer.getBody().getPort() + " of user " + sender);
                 } else if (answer.getStatus().equals("ADDED")) {
-                    userPortStorage.addUser(sender, inetAddress, assignedPort);
+                    userPortStorage.addUser(sender, inetAddress, assignedPort, this.serverName);
                     printOfServer("user data synced -> assigned port " + assignedPort + " to user " + sender);
                 }
                 return true;
@@ -313,7 +278,6 @@ public class Server2 extends Thread {
                     connection.closeConnection();
                     UserStorage buffer = this.userPortStorage;
                     buffer.join(answer.getUserStorage());
-                    //TODO: Hier muss geguckt werden dass die inet nicht null ist ... einen body gibt er immer zurück
                     UserStorage.Body userBody = buffer.getUser(message.getReciver());
                     if ((userBody.getInetAddress()) != null) {
                         printOfServer("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + userBody.getInetAddress().toString().substring(1) + ":" + userBody.getPort());
@@ -341,34 +305,6 @@ public class Server2 extends Thread {
             }
         }
         return true;
-    }
-
-    public int generateUniqueRandomNumber() {
-        //get random 4 digit number, but never the same
-        Random rand = new Random();
-        int num;
-        do {
-            num = rand.nextInt(9000) + 1000;
-        } while (usedPorts.contains(num));
-        usedPorts.add(num);
-        if (usedPorts.size() >= 9000) {
-            usedPorts.clear();
-        }
-        return num;
-    }
-
-    public void printOfServer(String printText) {
-        System.out.println(this.serverAddress + ":" + this.serverPort + " -> " + printText);
-    }
-
-    public static int randomNumber() {
-        Random random = new Random();
-        int randomNumber = random.nextInt(2);
-        return randomNumber;
-    }
-
-    public static int getInverse(int i) {
-        return (i + 1) % 2;
     }
 
     public TCPConnection getConnection(int index) {

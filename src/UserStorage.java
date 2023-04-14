@@ -1,4 +1,4 @@
-import java.io.Serializable;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.sql.Timestamp;
@@ -8,9 +8,36 @@ import java.util.Map;
 public class UserStorage implements Serializable {
     private Map<String, Body> map = new HashMap<>();
 
-    public void addUser(String username, InetAddress inetAddress, int port) {
+    public void addUser(String username, InetAddress inetAddress, int port, String serverName) {
         Body body = new Body(inetAddress, port);
         map.put(username, body);
+
+        // Schreibe Benutzerinformationen in Textdatei
+        String os = System.getProperty("os.name").toLowerCase();
+        String trenner;
+        if (os.contains("win")) {
+            // Windows
+            trenner = "\\\\";
+        } else {
+            // Unix-basierte Systeme (z.B. Mac OS X, Linux)
+            trenner = "/";
+        }
+
+        String filename = "src" + trenner + "userData" + trenner + serverName + "Users.txt";
+        FileWriter fileWriter = null; // FileWriter zum Schreiben in die Datei (true bedeutet, dass die Datei angehängt wird)
+        try {
+            fileWriter = new FileWriter(filename, true);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter); // BufferedWriter zum Puffern der Ausgabe
+
+            // Schreibe Benutzerinformationen in Textdatei
+            bufferedWriter.write(username + ";" + inetAddress.getHostAddress() + ";" + port + ";" + new Timestamp(System.currentTimeMillis()));
+            bufferedWriter.newLine();
+
+            // Schließe den BufferedWriter
+            bufferedWriter.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Body getUser(String username) {
@@ -77,7 +104,7 @@ public class UserStorage implements Serializable {
         for (String username : map.keySet()) {
             Body body = map.get(username);
             if(body.getInetAddress() != null){
-                System.out.println(username + ": " + body.getInetAddress().getHostAddress() + ":" + body.getPort() + " // "+ body.getTimestamp());
+                System.out.println(username + ": " + body.getInetAddress().getHostAddress() + ":" + body.getPort() + " Timestamp: "+ body.getTimestamp());
             }else {
                 System.out.println(username + "als username hat einen empty body");
             }
@@ -99,6 +126,40 @@ public class UserStorage implements Serializable {
                 map.put(username, otherBody);
             }
         }
+    }
+    public static UserStorage readFromTextFile(String serverName) {
+        UserStorage userStorage = new UserStorage();
+        String os = System.getProperty("os.name").toLowerCase();
+        String trenner;
+        if (os.contains("win")) {
+            // Windows
+            trenner = "\\\\";
+        } else {
+            // Unix-basierte Systeme (z.B. Mac OS X, Linux)
+            trenner = "/";
+        }
+
+        String filename = "src" + trenner + "userData" + trenner + serverName + "Users.txt";
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] tokens = line.split(";");
+                if (tokens.length != 4) {
+                    continue;
+                }
+                String username = tokens[0];
+                InetAddress inetAddress = InetAddress.getByName(tokens[1]);
+                int port = Integer.parseInt(tokens[2]);
+                long timestamp = Timestamp.valueOf(tokens[3]).getTime();
+                UserStorage.Body body = new UserStorage.Body(inetAddress, port);
+                userStorage.map.put(username, body);
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return userStorage;
     }
 
     @Override

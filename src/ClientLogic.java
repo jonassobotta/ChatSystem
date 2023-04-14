@@ -7,28 +7,29 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeMap;
 
-public class ClientLogic {
-    int[] serverPorts = {7777, 8888};
-    private final String serverAdress = "192.168.1.146";
+public class ClientLogic extends Thread {
+    private ArrayList<ConnectionInetPortList> partnerServerList;
     private BufferedReader reader;
-    private Socket socket = null;
-    private ServerSocket serverSocket;
+    public ServerSocket serverSocket;
     private String username;
     private String token;
     private String receiver;
-    private static int listenPort;
+    private int listenPort;
     private MessageStorage messageStorage;
     private ChatUI chatUI;
 
 
     public ClientLogic(ChatUI chatUI) {
         try {
+            this.partnerServerList = new ArrayList<>();
+            this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
+            this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
             this.chatUI = chatUI;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
-            this.listenPort = -1;
+            this.listenPort = 0;
             this.messageStorage = new MessageStorage();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error in ClientLogic Konstruktor: " + e.getMessage());
         }
     }
 
@@ -53,63 +54,49 @@ public class ClientLogic {
         return messageStorage.getMessages(username, receiver);
     }
 
-    class Listener extends Thread {
-        public void run() {
-            System.out.println("Writer running");
-            //Hier broadcast verschicken
-            try {
-                //was da loooos
-                while (listenPort == -1) {
-                    sleep(1);
-                }
-                serverSocket = new ServerSocket(listenPort);
-                System.out.println("Listenserver created with port " + serverSocket.getLocalPort());
-                while (true) {
-                    Socket clientSocket = serverSocket.accept();
-                    // Get input and output streams to communicate with the client
-                    ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                    ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-                    Message message = (Message) in.readObject();
-                    addMessageToHistory(message);
-                    chatUI.updateChatList();
+    public String getUsername() {
+        return username;
+    }
 
-                    in.close();
-                    out.close();
-                    clientSocket.close();
+    public void run() {
+        System.out.println("Writer running");
+        //Hier broadcast verschicken
+        try {
+            //was da loooos
+            while (listenPort == 0) {
+                sleep(1);
+            }
+            serverSocket = new ServerSocket(listenPort);
+            System.out.println("Listenserver created with port " + listenPort);
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                // Get input and output streams to communicate with the client
+                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                Message message = (Message) in.readObject();
+                addMessageToHistory(message);
+                chatUI.updateChatList();
 
-                }
-            } catch (Exception e) {
+                in.close();
+                out.close();
+                clientSocket.close();
 
             }
+        } catch (Exception e) {
+
         }
     }
 
-    public void start() {
-        new Listener().start();
-    }
 
     public void addMessageToHistory(Message message) {
-        this.messageStorage.addMessage(message);
+        this.messageStorage.addMessage(message, this.username);
         chatUI.initializeChatView();
-        System.out.println(message.getSender() + ": " + message.getMessageText());
-    }
-
-    public boolean getServers() throws IOException, ClassNotFoundException {
-        //send message with userdata to random server and receive all chat history
-        Message answer = sendMessage2(new Message(username, token, "WHERE_ARE_YOU"), 0);
-        if (answer.getStatus().equals("OK")) {
-            //add history
-            listenPort = answer.getPort();
-            return true;
-        } else {
-            return false;
-        }
     }
 
     public String checkUserData(int index) throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
 
-        Message answer = sendMessage2(new Message(username, token, "GET"), 0);
+        Message answer = sendMessage2(new Message(username, token, "GET"));
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
@@ -121,35 +108,43 @@ public class ClientLogic {
     public Message sendMessage(String messageText) throws IOException, ClassNotFoundException {
         //was wenn server ausfällt -> wie oben anpassen ... ggf alle über sendmessag2
         Message message = new Message(username, token, receiver, messageText);
-        return sendMessage2(message, 0);
-
-
+        return sendMessage2(message);
     }
 
-    public Message sendMessage2(Message message, int index) {
-        if (index == 7) {
-            return new Message("FAILED");
+    public Message sendMessage2(Message message) throws IOException, ClassNotFoundException {
+        TCPConnection socket = getConnection(0);
+        Message answer = socket.sendMessage(message).receiveAnswer();
+        if (message.getStatus().equals("SEND")) {
+            addMessageToHistory(message);
         }
-        try {
-            socket = new Socket(serverAdress, serverPorts[randomNumber()]);
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            out.writeObject(message);
-            Message answer = (Message) in.readObject();
-            if (message.getStatus().equals("SEND")) {
-                addMessageToHistory(message);
-            }
-            return answer;
-        } catch (Exception e) {
-            e.getMessage();
-            return sendMessage2(message, index + 1);
-        }
+        return answer;
     }
 
     public static int randomNumber() {
         Random random = new Random();
         int randomNumber = random.nextInt(2);
         return randomNumber;
+    }
+
+    public static int getInverse(int i) {
+        return (i + 1) % 2;
+    }
+
+    public TCPConnection getConnection(int index) {
+        if (index == 3) return null;
+        TCPConnection myConnection;
+        int first = randomNumber();
+        try {
+            myConnection = new TCPConnection(partnerServerList.get(first).getInetAddress(), partnerServerList.get(first).getPartnerPort());
+            return myConnection;
+        } catch (Exception e) {
+            try {
+                myConnection = new TCPConnection(partnerServerList.get(getInverse(first)).getInetAddress(), partnerServerList.get(getInverse(first)).getPartnerPort());
+                return myConnection;
+            } catch (Exception e2) {
+                return getConnection(index + 1);
+            }
+        }
     }
 
     public static String generateToken(String input) {

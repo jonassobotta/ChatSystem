@@ -91,6 +91,14 @@ public class Message implements Serializable {
         this.timestamp = System.currentTimeMillis();
     }
 
+    public Message(String sender, String token, String receiver, String messageText, long timestamp) {
+        this.sender = sender;
+        this.token = token;
+        this.reciver = receiver;
+        this.messageText = messageText;
+        this.timestamp = timestamp;
+    }
+
     public String getFormatChatMessageTime() {
         // Extrahiere Stunden, Minuten und Sekunden aus dem timestamp
         long seconds = this.timestamp / 1000;

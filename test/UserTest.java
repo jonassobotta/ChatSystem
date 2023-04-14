@@ -1,23 +1,22 @@
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class UserTest {
-    private static Server serverOne;
-    private static Server serverTwo;
+    private static Server1 server1One;
+    private static Server1 server1Two;
     private static ClientLogic clientLogic;
 
     @BeforeAll
     public static void beforeAll(){
-        serverOne = new Server(7777);
-        serverTwo = new Server(8888);
+        server1One = new Server1("Server1");
+        server1Two = new Server1("Server2");
         clientLogic = new ClientLogic(null);
     }
 
     @Test
     public void testUserLoginSuccess(){
         try{
-            serverOne.start();
+            server1One.start();
             clientLogic.setUsername("Joel");
             clientLogic.setPassword("Joel");
             clientLogic.checkUserData(0);

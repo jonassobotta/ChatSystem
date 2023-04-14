@@ -1,18 +1,14 @@
 import org.junit.jupiter.api.*;
 
-import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 class ServerTest {
-    private static Server serverOne;
-    private static Server serverTwo;
+    private static Server1 server1One;
+    private static Server1 server1Two;
     private static ClientLogic clientLogic;
 
     @BeforeAll
     public static void beforeAll() {
-        serverOne = new Server(7777);
-        serverTwo = new Server(8888);
+        server1One = new Server1("Server1");
+        server1Two = new Server1("Server2");
         clientLogic = new ClientLogic(null);
     }
 
@@ -20,41 +16,41 @@ class ServerTest {
     @Test
     public void serverSyncTest() {
         try {
-            serverOne.start();
+            server1One.start();
             clientLogic.setUsername("joel");
             clientLogic.setPassword("joel");
             clientLogic.checkUserData(0);
             clientLogic.setReceiver("luca");
             clientLogic.sendMessage("Hallo");
-            serverTwo.start();
+            server1Two.start();
             wait(4000);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        Assertions.assertEquals(true, serverOne.messageStorage.equals(serverTwo.messageStorage));
-        Assertions.assertEquals(true, serverOne.userPortStorage.equals(serverTwo.userPortStorage));
+        Assertions.assertEquals(true, server1One.messageStorage.equals(server1Two.messageStorage));
+        Assertions.assertEquals(true, server1One.userPortStorage.equals(server1Two.userPortStorage));
     }
 
     @Test
     public void serverRestartSyncTest() {
         try {
-            serverOne.start();
-            serverTwo.start();
+            server1One.start();
+            server1Two.start();
             clientLogic.setUsername("joel");
             clientLogic.setPassword("joel");
             clientLogic.checkUserData(0);
             clientLogic.setReceiver("luca");
             clientLogic.sendMessage("Hallo");
-            serverTwo.stop();
+            server1Two.stop();
             clientLogic.sendMessage("Wie gehts");
-            serverTwo = new Server(8888);
-            serverTwo.start();
+            server1Two = new Server1("Server2");
+            server1Two.start();
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        Assertions.assertEquals(true, serverOne.messageStorage.equals(serverTwo.messageStorage));
-        Assertions.assertEquals(true, serverOne.userPortStorage.equals(serverTwo.userPortStorage));
+        Assertions.assertEquals(true, server1One.messageStorage.equals(server1Two.messageStorage));
+        Assertions.assertEquals(true, server1One.userPortStorage.equals(server1Two.userPortStorage));
     }
 
 }

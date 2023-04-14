@@ -11,23 +11,23 @@ import java.util.TreeMap;
 
 
 public class ChatUI extends JFrame {
-    private JPanel panelCards;
-    private JPanel headerPanel;
-    private JPanel panelLogin;
-    private JPanel panelChatList;
-    private JPanel panelChatView;
+    private final JPanel panelCards;
+    private final JPanel headerPanel;
+    private final JPanel panelLogin;
+    private final JPanel panelChatList;
+    private final JPanel panelChatView;
     private ArrayList<String> chats;
-    private JList<String> chatList;
-    //private ClientLogic clientLogic;
-    private ClientLogic2 clientLogic;
+    private final JList<String> chatList;
+    private ClientLogic clientLogic;
+    //private ClientLogic2 clientLogic;
     private String currentChatPartner;
-    private ChatUI ownInstance;
+    private final ChatUI ownInstance;
 
     public ChatUI() {
         this.ownInstance = this;
 
-        //clientLogic = new ClientLogic(this);
-        clientLogic = new ClientLogic2(this);
+        clientLogic = new ClientLogic(this);
+        //clientLogic = new ClientLogic2(this);
         clientLogic.start();
 
         // Set the size and title of the JFrame
@@ -61,7 +61,8 @@ public class ChatUI extends JFrame {
         JLabel labelHeader = new JLabel("Chats von: ");
         panelHeader.add(labelHeader, BorderLayout.WEST);
         panelChatList.add(panelHeader, BorderLayout.NORTH);
-
+        JLabel labelHeaderUserName = new JLabel("");
+        panelHeader.add(labelHeaderUserName, BorderLayout.CENTER);
 
         JButton buttonLogout = new JButton("Logout");
         panelHeader.add(buttonLogout, BorderLayout.EAST);
@@ -74,7 +75,6 @@ public class ChatUI extends JFrame {
         buttonLogout.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("logout pls");
                 passwordField.setText("");
                 usernameField.setText("");
                 clientLogic.setReceiver("");
@@ -83,11 +83,10 @@ public class ChatUI extends JFrame {
 
                 try {
                     clientLogic.serverSocket.close();
-                    clientLogic.interrupt();
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
-                clientLogic = new ClientLogic2(ownInstance);
+                clientLogic = new ClientLogic(ownInstance);
                 clientLogic.start();
                 CardLayout cl = (CardLayout) panelCards.getLayout();
                 cl.show(panelCards, "Login");
@@ -95,28 +94,25 @@ public class ChatUI extends JFrame {
             }
         });
 
-        buttonAddChat.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // create pop-up window
-                JPanel popupPanel = new JPanel(new FlowLayout());
-                JTextField textField = new JTextField(10);
-                popupPanel.add(new JLabel("Enter chat partner name: "));
-                popupPanel.add(textField);
+        buttonAddChat.addActionListener(e -> {
+            // create pop-up window
+            JPanel popupPanel = new JPanel(new FlowLayout());
+            JTextField textField = new JTextField(10);
+            popupPanel.add(new JLabel("Enter chat partner name: "));
+            popupPanel.add(textField);
 
-                int result = JOptionPane.showConfirmDialog(ChatUI.this, popupPanel, "Add Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            int result = JOptionPane.showConfirmDialog(ChatUI.this, popupPanel, "Add Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-                if (result == JOptionPane.OK_OPTION) {
-                    String newChat = textField.getText();
-                    if (chats.contains(newChat)) {
-                        showChatAlreadyExistsPopup();
-                    }else if(clientLogic.getUsername().equals(newChat)){
-                        showMessageToOwnNamePopup();
-                    }
-                    else{
-                        chats.add(newChat);
-                        chatList.setListData(chats.toArray(new String[0]));
-                    }
+            if (result == JOptionPane.OK_OPTION) {
+                String newChat = textField.getText();
+                if (chats.contains(newChat)) {
+                    showChatAlreadyExistsPopup();
+                }else if(clientLogic.getUsername().equals(newChat)){
+                    showMessageToOwnNamePopup();
+                }
+                else{
+                    chats.add(newChat);
+                    chatList.setListData(chats.toArray(new String[0]));
                 }
             }
         });
@@ -153,22 +149,18 @@ public class ChatUI extends JFrame {
 
 
 // Add action listener to the send button
-        buttonSend.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String message = messageInputField.getText();
-                System.out.println("Message: " + message);
-                messageInputField.setText("");
-                try {
-                    Message answer = clientLogic.sendMessage(message);
-                    if(answer.getStatus().equals("FAILED")){
-                        showBadConnectionPopup();
-                    }
-                } catch (Exception error){
-                    System.out.println(error.getMessage());
+        buttonSend.addActionListener(e -> {
+            String message = messageInputField.getText();
+            messageInputField.setText("");
+            try {
+                Message answer = clientLogic.sendMessage(message);
+                if(answer.getStatus().equals("FAILED")){
+                    showBadConnectionPopup();
                 }
-
+            } catch (Exception error){
+                System.out.println("Could not send the message");
             }
+
         });
 
 
@@ -179,47 +171,37 @@ public class ChatUI extends JFrame {
         panelCards.add(panelChatView, "ChatView");
 
         // Add action listeners to the buttons
-        buttonLogin.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String username = usernameField.getText();
-                String password = new String(passwordField.getPassword());
-                System.out.println("Username: " + username);
-                clientLogic.setUsername(username);
-                System.out.println("Password: " + password);
-                clientLogic.setPassword(password);
+        buttonLogin.addActionListener(e -> {
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
+            clientLogic.setUsername(username);
+            clientLogic.setPassword(password);
 
-                try {
-                    String stateOfConnection = clientLogic.checkUserData(0);
-                    System.out.println(stateOfConnection);
-                    if (stateOfConnection.equals("OK")) {
-                        //weiter
-                        JLabel labelHeaderUserName = new JLabel(username);
-                        panelHeader.add(labelHeaderUserName, BorderLayout.CENTER);
-                        chats = clientLogic.getAllChatPartners(username);
-                        chatList.setListData(chats.toArray(new String[0]));
-                        CardLayout cl = (CardLayout) panelCards.getLayout();
-                        cl.show(panelCards, "ChatList");
-                    } else if (stateOfConnection.equals("INVALID_USER")){
-                        showInvalidPasswordPopup();
-                    }else {
-                        //zurück
-                        showBadConnectionPopup();
-                    }
-
-                } catch (Exception error) {
-                    System.out.println(error.getMessage());
+            try {
+                String stateOfConnection = clientLogic.checkUserData(0);
+                if (stateOfConnection.equals("OK")) {
+                    //weiter
+                    labelHeaderUserName.setText(username);
+                    chats = clientLogic.getAllChatPartners(username);
+                    chatList.setListData(chats.toArray(new String[0]));
+                    CardLayout cl = (CardLayout) panelCards.getLayout();
+                    cl.show(panelCards, "ChatList");
+                } else if (stateOfConnection.equals("INVALID_USER")){
+                    showInvalidPasswordPopup();
+                }else {
+                    //zurück
+                    showBadConnectionPopup();
                 }
+
+            } catch (Exception error) {
+                System.out.println("Login failed: Bad connection");
             }
         });
 
 
-        buttonBack.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                CardLayout cl = (CardLayout) panelCards.getLayout();
-                cl.show(panelCards, "ChatList");
-            }
+        buttonBack.addActionListener(e -> {
+            CardLayout cl = (CardLayout) panelCards.getLayout();
+            cl.show(panelCards, "ChatList");
         });
 
         // Add the card panel to the JFrame
@@ -248,7 +230,6 @@ public class ChatUI extends JFrame {
     private void openChat(String chatPartner) {
 
         clientLogic.setReceiver(chatPartner);
-        System.out.println(chatPartner);
         // Set the chat view panel title
         JLabel labelChatView = (JLabel) headerPanel.getComponent(1);
         labelChatView.setText("Chat View: " + chatPartner);
@@ -277,7 +258,6 @@ public class ChatUI extends JFrame {
                     String messageText = message.getMessageText();
                     String messageTime = message.getFormatChatMessageTime();
                     chatTextArea.append("(" + messageTime + ")" + " " + sender + ": " + messageText + "\n");
-                    System.out.println(messageText);
                 }
             }
         }

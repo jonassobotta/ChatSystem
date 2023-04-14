@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
@@ -8,9 +9,7 @@ import java.util.Random;
 import java.util.TreeMap;
 
 public class ClientLogic2 extends Thread {
-    int[] serverPorts = {7777, 8888, 9999};
-    public final String serverAdress = "192.168.178.29";
-    private ArrayList<PartnerServerList> partnerServerList;
+    private ArrayList<ConnectionInetPortList> partnerServerList;
     private BufferedReader reader;
     private Socket socket = null;
     public ServerSocket serverSocket;
@@ -22,43 +21,18 @@ public class ClientLogic2 extends Thread {
     private ChatUI chatUI;
     public String interrupt = "NO";
 
-    public class PartnerServerList {
-        private int partnerPort;
-        private String inetAddress;
-
-        public PartnerServerList(String inetAddress, int partnerPort) {
-            this.partnerPort = partnerPort;
-            this.inetAddress = inetAddress;
-        }
-
-        public int getPartnerPort() {
-            return partnerPort;
-        }
-
-        public void setPartnerPort(int partnerPort) {
-            this.partnerPort = partnerPort;
-        }
-
-        public String getInetAddress() {
-            return inetAddress;
-        }
-
-        public void setInetAddress(String inetAddress) {
-            this.inetAddress = inetAddress;
-        }
-    }
     public ClientLogic2(ChatUI chatUI) {
         this.partnerServerList = new ArrayList<>();
-        this.partnerServerList.add(new PartnerServerList("192.168.178.29", 7777));
-        this.partnerServerList.add(new PartnerServerList("192.168.178.29", 8888));
-        this.partnerServerList.add(new PartnerServerList("192.168.178.81", 9999));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 9999));
         try {
             this.chatUI = chatUI;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
             this.listenPort = -1;
             this.messageStorage = new MessageStorage();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error in ClientLogic Konstruktor: " + e.getMessage());
         }
     }
 
@@ -92,7 +66,6 @@ public class ClientLogic2 extends Thread {
             while (listenPort == -1 && !Thread.currentThread().isInterrupted()) {
                 sleep(1);
             }
-            System.out.println("test");
             serverSocket = new ServerSocket(listenPort);
             System.out.println("Listenserver created with port " + serverSocket.getLocalPort());
             while (!Thread.currentThread().isInterrupted()) {
@@ -104,7 +77,6 @@ public class ClientLogic2 extends Thread {
                     Message message = (Message) in.readObject();
                     if(message.getStatus() != null && message.getStatus().equals("INTERRUPT")){
                         this.interrupt();
-                        System.out.println("ghjklkjhgfghjklö");
                     }else{
                         addMessageToHistory(message);
                         chatUI.updateChatList();
@@ -124,14 +96,13 @@ public class ClientLogic2 extends Thread {
 
 
     public void addMessageToHistory(Message message) {
-        this.messageStorage.addMessage(message);
+        this.messageStorage.addMessage(message, this.username);
         chatUI.initializeChatView();
-        System.out.println(message.getSender() + ": " + message.getMessageText());
     }
 
     public boolean getServers() throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
-        Message answer = sendMessage2(new Message(username, token, "WHERE_ARE_YOU"), 0);
+        Message answer = sendMessage2(new Message(username, token, "WHERE_ARE_YOU"));
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
@@ -144,7 +115,7 @@ public class ClientLogic2 extends Thread {
     public String checkUserData(int index) throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
 
-        Message answer = sendMessage2(new Message(username, token, "GET"), 0);
+        Message answer = sendMessage2(new Message(username, token, "GET"));
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
@@ -156,29 +127,36 @@ public class ClientLogic2 extends Thread {
     public Message sendMessage(String messageText) throws IOException, ClassNotFoundException {
         //was wenn server ausfällt -> wie oben anpassen ... ggf alle über sendmessag2
         Message message = new Message(username, token, receiver, messageText);
-        return sendMessage2(message, 0);
+        return sendMessage2(message);
 
 
     }
 
-    public Message sendMessage2(Message message, int index) {
-        if (index == 7) {
-            return new Message("FAILED");
+    public Message sendMessage2(Message message) throws IOException, ClassNotFoundException {
+        TCPConnection socket = getConnection(0);
+        Message answer = socket.sendMessage(message).receiveAnswer();
+        if (message.getStatus().equals("SEND")) {
+            addMessageToHistory(message);
         }
+        return answer;
+    }
+
+
+    public TCPConnection getConnection(int index) {
+        if (index == 3) return null;
+        TCPConnection myConnection;
+        int first = randomNumber();
+        //Das muss nur zweimal probiert werden, wenn zwei Server down sind bringt es dem Client auch nichts sich mit dem dritten Server zu verbinden (MCS)
         try {
-            int randomNumber = randomNumber();
-            socket = new Socket(partnerServerList.get(randomNumber).getInetAddress(), partnerServerList.get(randomNumber).getPartnerPort());
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            out.writeObject(message);
-            Message answer = (Message) in.readObject();
-            if (message.getStatus().equals("SEND")) {
-                addMessageToHistory(message);
-            }
-            return answer;
+            myConnection = new TCPConnection(partnerServerList.get(first).getInetAddress(), partnerServerList.get(first).getPartnerPort());
+            return myConnection;
         } catch (Exception e) {
-            e.getMessage();
-            return sendMessage2(message, index + 1);
+            try {
+                myConnection = new TCPConnection(partnerServerList.get(getInverse(first)).getInetAddress(), partnerServerList.get(getInverse(first)).getPartnerPort());
+                return myConnection;
+            } catch (Exception e2) {
+                return getConnection(index + 1);
+            }
         }
     }
 
@@ -186,6 +164,31 @@ public class ClientLogic2 extends Thread {
         Random random = new Random();
         int randomNumber = random.nextInt(3);
         return randomNumber;
+    }
+    public static int getInverse(int zahl) {
+        // Erzeugung eines Zufallsgenerators
+        Random random = new Random();
+        int andereZahl;
+        // Verwendung eines switch-Statements, um die andere Zahl je nach gegebener Zahl auszuwählen
+        switch (zahl) {
+            case 1:
+                // Generiere eine Zufallszahl zwischen 2 und 3 (einschließlich)
+                andereZahl = random.nextInt(2) + 2;
+                break;
+            case 2:
+                // Generiere entweder 1 oder 3 (Zufall)
+                andereZahl = random.nextInt(2) * 2 + 1;
+                break;
+            case 3:
+                // Generiere eine Zufallszahl zwischen 1 und 2 (einschließlich)
+                andereZahl = random.nextInt(2) + 1;
+                break;
+            default:
+                // Wenn eine ungültige Zahl übergeben wurde, gib eine Fehlermeldung aus
+                throw new IllegalArgumentException("Ungültige Zahl! Bitte 1, 2 oder 3 verwenden.");
+        }
+
+        return andereZahl;
     }
 
 

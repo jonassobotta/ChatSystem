@@ -1,4 +1,4 @@
-import java.io.Serializable;
+import java.io.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Map;
@@ -13,6 +13,7 @@ public class MessageStorage implements Serializable{
     public MessageStorage() {
         storage = new TreeMap<>();
         userList = new ArrayList<>();
+
     }
 
     public MessageStorage getChatsForUser(String user) {
@@ -34,7 +35,7 @@ public class MessageStorage implements Serializable{
         return result;
     }
 
-    public void addMessage(Message message) {
+    public void addMessage(Message message, String serverName) {
         String userCombination = getUserCombinationKey(message.getSender(), message.getReciver());
         Chat chat = storage.getOrDefault(userCombination, new Chat());
         chat.addMessage(message);
@@ -42,7 +43,44 @@ public class MessageStorage implements Serializable{
 
         if (userList.contains(message.getSender()) == false) userList.add(message.getSender());
         if (userList.contains(message.getReciver()) == false) userList.add(message.getReciver());
+        //Nur Nachrichten hinzufügen, die von Usern sind, und auf einen Server Storage geschrieben werden
+        if(serverName.contains("Server") && message.getMessageText()!=null && serverName.equals("NONE") == false){
+            addMessageToTextFile(message, serverName);
+        }
     }
+    private void addMessageToTextFile(Message message, String serverName) {
+        String os = System.getProperty("os.name").toLowerCase();
+        String trenner;
+
+        if (os.contains("win")) {
+            // Windows
+            trenner = "\\\\";
+        } else {
+            // Unix-basierte Systeme (z.B. Mac OS X, Linux)
+            trenner = "/";
+        }
+        String filename = "src" + trenner + "messageData" + trenner  + serverName + "Messages.txt";
+        FileWriter fileWriter = null; // FileWriter zum Schreiben in die Datei (true bedeutet, dass die Datei angehängt wird)
+        try {
+            fileWriter = new FileWriter(filename, true);
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter); // BufferedWriter zum Puffern der Ausgabe
+
+            // Schreibe Nachricht mit Metadaten in Textdatei
+            bufferedWriter.write(message.getSender() + ";");
+            bufferedWriter.write(message.getReciver() + ";");
+            bufferedWriter.write(message.getTimestamp() + ";");
+            bufferedWriter.write(message.getMessageText());
+            bufferedWriter.newLine(); // Füge eine neue Zeile hinzu, um die Nachrichten zu trennen
+
+            // Schließe den BufferedWriter
+            bufferedWriter.close();
+            fileWriter.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
 
     public TreeMap<UniqueTimestamp, Message> getMessages(String userOne, String userTwo) {
         String userCombination = getUserCombinationKey(userOne, userTwo);
@@ -144,6 +182,42 @@ public class MessageStorage implements Serializable{
             return false;
         }
         return true;
+    }
+    public static MessageStorage readFromTextFile(String serverName) {
+        MessageStorage messageStorage = new MessageStorage();
+        String os = System.getProperty("os.name").toLowerCase();
+        String trenner;
+        if (os.contains("win")) {
+            // Windows
+            trenner = "\\\\";
+        } else {
+            // Unix-basierte Systeme (z.B. Mac OS X, Linux)
+            trenner = "/";
+        }
+
+        String filename = "src" + trenner + "messageData" + trenner  + serverName + "Messages.txt";
+        System.out.println(filename);
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+                String[] tokens = line.split(";");
+                if (tokens.length != 4) {
+                    continue;
+                }
+                String sender = tokens[0];
+                String receiver = tokens[1];
+                long timestamp = Long.parseLong(tokens[2]);
+                String messageText = tokens[3];
+                Message message = new Message(sender, "RELOADED_FROM_FILE" , receiver, messageText, timestamp);
+                messageStorage.addMessage(message, "NONE");
+            }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return messageStorage;
     }
 
 }
