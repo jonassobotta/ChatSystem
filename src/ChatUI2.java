@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 
-public class ChatUI extends JFrame {
+public class ChatUI2 extends JFrame {
     private final JPanel panelCards;
     private final JPanel headerPanel;
     private final JPanel panelLogin;
@@ -18,16 +18,15 @@ public class ChatUI extends JFrame {
     private final JPanel panelChatView;
     private ArrayList<String> chats;
     private final JList<String> chatList;
-    private ClientLogic clientLogic;
+    private ClientLogic2 clientLogic;
     //private ClientLogic2 clientLogic;
     private String currentChatPartner;
-    private final ChatUI ownInstance;
+    private final ChatUI2 ownInstance;
 
-    public ChatUI() {
+    public ChatUI2() {
         this.ownInstance = this;
 
-        clientLogic = new ClientLogic(this);
-        //clientLogic = new ClientLogic2(this);
+        clientLogic = new ClientLogic2(this);
         clientLogic.start();
 
         // Set the size and title of the JFrame
@@ -86,7 +85,7 @@ public class ChatUI extends JFrame {
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
-                clientLogic = new ClientLogic(ownInstance);
+                clientLogic = new ClientLogic2(ownInstance);
                 clientLogic.start();
                 CardLayout cl = (CardLayout) panelCards.getLayout();
                 cl.show(panelCards, "Login");
@@ -101,7 +100,7 @@ public class ChatUI extends JFrame {
             popupPanel.add(new JLabel("Enter chat partner name: "));
             popupPanel.add(textField);
 
-            int result = JOptionPane.showConfirmDialog(ChatUI.this, popupPanel, "Add Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            int result = JOptionPane.showConfirmDialog(ChatUI2.this, popupPanel, "Add Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
             if (result == JOptionPane.OK_OPTION) {
                 String newChat = textField.getText();
@@ -195,6 +194,7 @@ public class ChatUI extends JFrame {
 
             } catch (Exception error) {
                 System.out.println("Login failed: Bad connection");
+                showBadConnectionPopup();
             }
         });
 
@@ -264,6 +264,6 @@ public class ChatUI extends JFrame {
     }
 
     public static void main(String[] args) {
-        new ChatUI();
+        new ChatUI1();
     }
 }

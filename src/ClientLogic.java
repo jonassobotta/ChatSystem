@@ -16,10 +16,10 @@ public class ClientLogic extends Thread {
     private String receiver;
     private int listenPort;
     private MessageStorage messageStorage;
-    private ChatUI chatUI;
+    private ChatUI1 chatUI;
 
 
-    public ClientLogic(ChatUI chatUI) {
+    public ClientLogic(ChatUI1 chatUI) {
         try {
             this.partnerServerList = new ArrayList<>();
             this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
@@ -60,16 +60,16 @@ public class ClientLogic extends Thread {
 
     public void run() {
         System.out.println("Writer running");
-        //Hier broadcast verschicken
         try {
-            //was da loooos
             while (listenPort == 0) {
                 sleep(1);
             }
+            System.out.println(listenPort);
             serverSocket = new ServerSocket(listenPort);
             System.out.println("Listenserver created with port " + listenPort);
             while (true) {
                 Socket clientSocket = serverSocket.accept();
+                clientSocket.setSoTimeout(1000);
                 // Get input and output streams to communicate with the client
                 ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
@@ -83,7 +83,7 @@ public class ClientLogic extends Thread {
 
             }
         } catch (Exception e) {
-
+            System.out.println(e.getMessage());
         }
     }
 
@@ -95,13 +95,13 @@ public class ClientLogic extends Thread {
 
     public String checkUserData(int index) throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
-
         Message answer = sendMessageByObejct(new Message(username, token, "GET"));
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
             this.messageStorage = answer.getMessageStorage();
         }
+        System.out.println("habe eine antwort bekommen in checkUserdata in client logic");
         return answer.getStatus();
     }
 
@@ -130,8 +130,9 @@ public class ClientLogic extends Thread {
         return (i + 1) % 2;
     }
 
-    public TCPConnection getConnection(int index) {
-        if (index == 3) return null;
+    public TCPConnection getConnection(int index) throws IOException {
+        if (index == 2) throw new IOException();
+        System.out.println(index);
         TCPConnection myConnection;
         int first = randomNumber();
         try {

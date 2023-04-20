@@ -36,16 +36,18 @@ public class MessageStorage implements Serializable{
     }
 
     public void addMessage(Message message, String serverName) {
-        String userCombination = getUserCombinationKey(message.getSender(), message.getReciver());
-        Chat chat = storage.getOrDefault(userCombination, new Chat());
-        chat.addMessage(message);
-        storage.put(userCombination, chat);
+        if(message.getReciver().contains("Server") == false){
+            String userCombination = getUserCombinationKey(message.getSender(), message.getReciver());
+            Chat chat = storage.getOrDefault(userCombination, new Chat());
+            chat.addMessage(message);
+            storage.put(userCombination, chat);
 
-        if (userList.contains(message.getSender()) == false) userList.add(message.getSender());
-        if (userList.contains(message.getReciver()) == false) userList.add(message.getReciver());
-        //Nur Nachrichten hinzufügen, die von Usern sind, und auf einen Server Storage geschrieben werden
-        if(serverName.contains("Server") && message.getMessageText()!=null && serverName.equals("NONE") == false){
-            addMessageToTextFile(message, serverName);
+            if (userList.contains(message.getSender()) == false) userList.add(message.getSender());
+            if (userList.contains(message.getReciver()) == false) userList.add(message.getReciver());
+            //Nur Nachrichten hinzufügen, die von Usern sind, und auf einen Server Storage geschrieben werden
+            if(serverName.contains("Server") && message.getMessageText()!=null && serverName.equals("NONE") == false){
+                addMessageToTextFile(message, serverName);
+            }
         }
     }
     private void addMessageToTextFile(Message message, String serverName) {
@@ -111,22 +113,24 @@ public class MessageStorage implements Serializable{
             return chat;
         }
     }
-    public void print() {
-        System.out.println("=== Message Storage ===");
+    public String print() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(" \n === Message Storage ===\n");
         for (Map.Entry<String, Chat> entry : storage.entrySet()) {
             String userCombination = entry.getKey();
             Chat chat = entry.getValue();
 
-            System.out.println("Users: " + userCombination);
+            stringBuilder.append("Users: ").append(userCombination).append("\n");
             TreeMap<UniqueTimestamp, Message> messages = chat.getMessages();
             for (Map.Entry<UniqueTimestamp, Message> msgEntry : messages.entrySet()) {
                 UniqueTimestamp uniqueTimestamp = msgEntry.getKey();
                 Message message = msgEntry.getValue();
                 Timestamp timestamp = new Timestamp(message.getTimestamp());
-                System.out.println(String.format("  [%s] %s: %s", timestamp.toString(), uniqueTimestamp.user, message.getMessageText()));
+                stringBuilder.append(String.format("  [%s] %s: %s\n", timestamp.toString(), uniqueTimestamp.user, message.getMessageText()));
             }
         }
-        System.out.println("=======================");
+        stringBuilder.append("=======================\n");
+        return stringBuilder.toString();
     }
     public ArrayList<String> getChatPartnersForUser(String username) {
         ArrayList<String> chatPartners = new ArrayList<>();
@@ -196,12 +200,10 @@ public class MessageStorage implements Serializable{
         }
 
         String filename = "src" + trenner + "messageData" + trenner  + serverName + "Messages.txt";
-        System.out.println(filename);
 
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
             while ((line = br.readLine()) != null) {
-                System.out.println(line);
                 String[] tokens = line.split(";");
                 if (tokens.length < 4) {
                     continue;

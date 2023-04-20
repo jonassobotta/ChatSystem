@@ -75,7 +75,6 @@ public class UserStorage implements Serializable {
         }
 
         public void setInetAddress(InetAddress inetAddress) {
-            System.out.println("setzte inet adress to: " + inetAddress);
             this.inetAddress = inetAddress;
         }
 
@@ -100,15 +99,27 @@ public class UserStorage implements Serializable {
         }
     }
 
-    public void print() {
+    public String print() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(" \n === Message Storage ===\n");
+
         for (String username : map.keySet()) {
             Body body = map.get(username);
-            if(body.getInetAddress() != null){
-                System.out.println(username + ": " + body.getInetAddress().getHostAddress() + ":" + body.getPort() + " Timestamp: "+ body.getTimestamp());
-            }else {
-                System.out.println(username + "als username hat einen empty body");
+            if (body.getInetAddress() != null) {
+                sb.append(username)
+                        .append(": ")
+                        .append(body.getInetAddress().getHostAddress())
+                        .append(":")
+                        .append(body.getPort())
+                        .append(" Timestamp: ")
+                        .append(body.getTimestamp())
+                        .append(System.lineSeparator());
+            } else {
+                //sb.append(username).append(" als username hat einen empty body").append(System.lineSeparator());
             }
         }
+
+        return sb.toString();
     }
 
     public void join(UserStorage other) { //Falls bei Read User zwei server unterschiedliches inet adresse von einem user haben wird die neuste genommen

@@ -1,5 +1,4 @@
 import java.io.*;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
@@ -18,10 +17,10 @@ public class ClientLogic2 extends Thread {
     private String receiver;
     public int listenPort;
     private MessageStorage messageStorage;
-    private ChatUI chatUI;
+    private ChatUI2 chatUI;
     public String interrupt = "NO";
 
-    public ClientLogic2(ChatUI chatUI) {
+    public ClientLogic2(ChatUI2 chatUI) {
         this.partnerServerList = new ArrayList<>();
         this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
         this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
@@ -102,7 +101,7 @@ public class ClientLogic2 extends Thread {
 
     public boolean getServers() throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
-        Message answer = sendMessage2(new Message(username, token, "WHERE_ARE_YOU"));
+        Message answer = sendMessageByObject(new Message(username, token, "WHERE_ARE_YOU"));
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
@@ -115,7 +114,7 @@ public class ClientLogic2 extends Thread {
     public String checkUserData(int index) throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
 
-        Message answer = sendMessage2(new Message(username, token, "GET"));
+        Message answer = sendMessageByObject(new Message(username, token, "GET"));
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
@@ -124,16 +123,17 @@ public class ClientLogic2 extends Thread {
         return answer.getStatus();
     }
 
-    public Message sendMessage(String messageText) throws IOException, ClassNotFoundException {
+    public Message sendMessageByString(String messageText) throws IOException, ClassNotFoundException {
         //was wenn server ausfällt -> wie oben anpassen ... ggf alle über sendmessag2
         Message message = new Message(username, token, receiver, messageText);
-        return sendMessage2(message);
+        return sendMessageByObject(message);
 
 
     }
 
-    public Message sendMessage2(Message message) throws IOException, ClassNotFoundException {
+    public Message sendMessageByObject(Message message) throws IOException, ClassNotFoundException {
         TCPConnection socket = getConnection(0);
+
         Message answer = socket.sendMessage(message).receiveAnswer();
         if (message.getStatus().equals("SEND")) {
             addMessageToHistory(message);
@@ -143,7 +143,7 @@ public class ClientLogic2 extends Thread {
 
 
     public TCPConnection getConnection(int index) {
-        if (index == 3) return null;
+        if (index == 2) return null;
         TCPConnection myConnection;
         int first = randomNumber();
         //Das muss nur zweimal probiert werden, wenn zwei Server down sind bringt es dem Client auch nichts sich mit dem dritten Server zu verbinden (MCS)

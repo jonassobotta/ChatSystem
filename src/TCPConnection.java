@@ -10,6 +10,7 @@ public class TCPConnection {
     public TCPConnection(String serverAddress, int port) throws IOException {
         this.socket = new Socket();
         socket.connect(new InetSocketAddress(serverAddress, port), 1000);
+        socket.setSoTimeout(1000);
         this.out = new ObjectOutputStream(this.socket.getOutputStream());
         this.in = new ObjectInputStream(this.socket.getInputStream());
     }
