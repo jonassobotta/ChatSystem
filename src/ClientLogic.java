@@ -64,7 +64,6 @@ public class ClientLogic extends Thread {
             while (listenPort == 0) {
                 sleep(1);
             }
-            System.out.println(listenPort);
             serverSocket = new ServerSocket(listenPort);
             System.out.println("Listenserver created with port " + listenPort);
             while (true) {
@@ -101,7 +100,6 @@ public class ClientLogic extends Thread {
             listenPort = answer.getPort();
             this.messageStorage = answer.getMessageStorage();
         }
-        System.out.println("habe eine antwort bekommen in checkUserdata in client logic");
         return answer.getStatus();
     }
 
@@ -132,7 +130,6 @@ public class ClientLogic extends Thread {
 
     public TCPConnection getConnection(int index) throws IOException {
         if (index == 2) throw new IOException();
-        System.out.println(index);
         TCPConnection myConnection;
         int first = randomNumber();
         try {

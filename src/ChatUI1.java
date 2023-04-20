@@ -180,7 +180,6 @@ public class ChatUI1 extends JFrame {
 
             try {
                 String stateOfConnection = clientLogic.checkUserData(0);
-                System.out.println(stateOfConnection);
                 if (stateOfConnection.equals("OK")) {
                     //weiter
                     labelHeaderUserName.setText(username);

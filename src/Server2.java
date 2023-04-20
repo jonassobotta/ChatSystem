@@ -245,7 +245,7 @@ public class Server2 extends Server {
             TCPConnection connection = getConnection(0);
             Message answer;
             answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "SYNC_MESSAGE_STORAGE")).receiveAnswer();
-            this.messageStorage.join(answer.getMessageStorage());
+            this.messageStorage.join(answer.getMessageStorage(), this.serverName);
             return true;
         } catch (Exception e) {
             return false;
@@ -283,7 +283,7 @@ public class Server2 extends Server {
                     Message answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "READ_USER")).receiveAnswer();
                     connection.closeConnection();
                     UserStorage buffer = this.userPortStorage;
-                    buffer.join(answer.getUserStorage());
+                    buffer.join(answer.getUserStorage(), serverName);
                     UserStorage.Body userBody = buffer.getUser(message.getReciver());
                     if ((userBody.getInetAddress()) != null) {
                         printOfServer("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + userBody.getInetAddress().toString().substring(1) + ":" + userBody.getPort());

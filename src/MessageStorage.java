@@ -50,6 +50,50 @@ public class MessageStorage implements Serializable{
             }
         }
     }
+    public void writeToFile(String serverName) {
+        String os = System.getProperty("os.name").toLowerCase();
+        String trenner;
+
+        if (os.contains("win")) {
+            // Windows
+            trenner = "\\\\";
+        } else {
+            // Unix-basierte Systeme (z.B. Mac OS X, Linux)
+            trenner = "/";
+        }
+        String filename = "src" + trenner + "messageData" + trenner  + serverName + "Messages.txt";
+        FileWriter fileWriter = null; // FileWriter zum Schreiben in die Datei (true bedeutet, dass die Datei angehängt wird)
+        try {
+            fileWriter = new FileWriter(filename, false); // false, um die Datei zu leeren
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter); // BufferedWriter zum Puffern der Ausgabe
+
+            // Schreibe jede Nachricht in die Textdatei
+            for (Map.Entry<String, Chat> entry : storage.entrySet()) {
+                Chat chat = entry.getValue();
+                TreeMap<UniqueTimestamp, Message> messages = chat.getMessages();
+                for (Map.Entry<UniqueTimestamp, Message> msgEntry : messages.entrySet()) {
+                    Message message = msgEntry.getValue();
+                    //Nur Nachrichten hinzufügen, die von Usern sind, und auf einen Server Storage geschrieben werden
+                    if(message.getReciver().contains("Server") == false && serverName.contains("Server") && message.getMessageText()!=null && serverName.equals("NONE") == false){
+                        // Schreibe Nachricht mit Metadaten in Textdatei
+                        bufferedWriter.write(message.getSender() + ";");
+                        bufferedWriter.write(message.getReciver() + ";");
+                        bufferedWriter.write(message.getTimestamp() + ";");
+                        bufferedWriter.write(message.getMessageText());
+                        bufferedWriter.newLine(); // Füge eine neue Zeile hinzu, um die Nachrichten zu trennen
+                    }
+                }
+            }
+
+            // Schließe den BufferedWriter
+            bufferedWriter.close();
+            fileWriter.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     private void addMessageToTextFile(Message message, String serverName) {
         String os = System.getProperty("os.name").toLowerCase();
         String trenner;
@@ -147,7 +191,7 @@ public class MessageStorage implements Serializable{
         }
         return chatPartners;
     }
-    public void join(MessageStorage otherStorage) {
+    public void join(MessageStorage otherStorage, String servername) {
         if(otherStorage != null){
             // Join the chat messages
             for (Map.Entry<String, Chat> entry : otherStorage.storage.entrySet()) {
@@ -168,6 +212,7 @@ public class MessageStorage implements Serializable{
                     userList.add(user);
                 }
             }
+            writeToFile(servername);
         }
     }
     @Override

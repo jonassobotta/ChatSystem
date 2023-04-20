@@ -109,8 +109,8 @@ public class Server1 extends Server {
             try {
                 answer = new TCPConnection(partnerServerList.get(0).getInetAddress(), partnerServerList.get(0).getPartnerPort()).sendMessage(new Message(this.serverName, this.serverToken, "REBOOT", this.messageStorage, this.userPortStorage)).receiveAnswer();
                 printOfServer("Server is updating with other server");
-                if (answer.getMessageStorage() != null) messageStorage.join(answer.getMessageStorage());
-                if (answer.getUserStorage() != null) userPortStorage.join(answer.getUserStorage());
+                if (answer.getMessageStorage() != null) messageStorage.join(answer.getMessageStorage(), this.serverName);
+                if (answer.getUserStorage() != null) userPortStorage.join(answer.getUserStorage(), serverName);
                 printOfServer("Server is updated");
                 printOfServer(messageStorage.print());
             } catch (Exception e) {
@@ -157,10 +157,10 @@ public class Server1 extends Server {
                 break;
             case "REBOOT":
                 if(message.getMessageStorage() != null){
-                    this.messageStorage.join(message.getMessageStorage());
+                    this.messageStorage.join(message.getMessageStorage(), this.serverName);
                 }
                 if(message.getUserStorage() != null){
-                    this.userPortStorage.join(message.getUserStorage());
+                    this.userPortStorage.join(message.getUserStorage(),serverName);
                 }
                 printOfServer("Server is updated");
                 printOfServer(this.messageStorage.print());
@@ -179,7 +179,7 @@ public class Server1 extends Server {
             try {
                 getConnection(0).sendMessage(new Message(serverName, serverToken, "Server", sender, inetAddress, assignedPort)).closeConnection();
             } catch (IOException e) {
-                System.out.println("Sync failed" + e.getMessage());
+                System.out.println("Sync failed");
             }
         }).start();
     }

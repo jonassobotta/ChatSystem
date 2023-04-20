@@ -39,6 +39,29 @@ public class UserStorage implements Serializable {
             throw new RuntimeException(e);
         }
     }
+    public void writeToTextFile(String serverName) {
+        String os = System.getProperty("os.name").toLowerCase();
+        String trenner;
+        if (os.contains("win")) {
+            // Windows
+            trenner = "\\\\";
+        } else {
+            // Unix-basierte Systeme (z.B. Mac OS X, Linux)
+            trenner = "/";
+        }
+
+        String filename = "src" + trenner + "userData" + trenner + serverName + "Users.txt";
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
+            for (String username : map.keySet()) {
+                Body body = map.get(username);
+                bw.write(username + ";" + body.getInetAddress().getHostAddress() + ";" + body.getPort() + ";" + new Timestamp(body.getTimestamp()));
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     public Body getUser(String username) {
         if(map.get(username) != null){
@@ -101,7 +124,7 @@ public class UserStorage implements Serializable {
 
     public String print() {
         StringBuilder sb = new StringBuilder();
-        sb.append(" \n === Message Storage ===\n");
+        sb.append(" \n === User Port Storage ===\n");
 
         for (String username : map.keySet()) {
             Body body = map.get(username);
@@ -122,7 +145,7 @@ public class UserStorage implements Serializable {
         return sb.toString();
     }
 
-    public void join(UserStorage other) { //Falls bei Read User zwei server unterschiedliches inet adresse von einem user haben wird die neuste genommen
+    public void join(UserStorage other,String servername) { //Falls bei Read User zwei server unterschiedliches inet adresse von einem user haben wird die neuste genommen
         for (String username : other.map.keySet()) {
             Body otherBody = other.map.get(username);
             if (map.containsKey(username)) {
@@ -137,6 +160,7 @@ public class UserStorage implements Serializable {
                 map.put(username, otherBody);
             }
         }
+        writeToTextFile(servername);
     }
     public static UserStorage readFromTextFile(String serverName) {
         UserStorage userStorage = new UserStorage();
