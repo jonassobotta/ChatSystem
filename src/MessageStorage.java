@@ -203,13 +203,16 @@ public class MessageStorage implements Serializable{
             while ((line = br.readLine()) != null) {
                 System.out.println(line);
                 String[] tokens = line.split(";");
-                if (tokens.length != 4) {
+                if (tokens.length < 4) {
                     continue;
                 }
                 String sender = tokens[0];
                 String receiver = tokens[1];
                 long timestamp = Long.parseLong(tokens[2]);
-                String messageText = tokens[3];
+                String messageText = "";
+                for(int i = 3; i < tokens.length; i++){
+                    messageText += tokens[i];
+                }
                 Message message = new Message(sender, "RELOADED_FROM_FILE" , receiver, messageText, timestamp);
                 messageStorage.addMessage(message, "NONE");
             }

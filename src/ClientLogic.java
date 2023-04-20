@@ -96,7 +96,7 @@ public class ClientLogic extends Thread {
     public String checkUserData(int index) throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
 
-        Message answer = sendMessage2(new Message(username, token, "GET"));
+        Message answer = sendMessageByObejct(new Message(username, token, "GET"));
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
@@ -105,13 +105,13 @@ public class ClientLogic extends Thread {
         return answer.getStatus();
     }
 
-    public Message sendMessage(String messageText) throws IOException, ClassNotFoundException {
+    public Message sendMessageByString(String messageText) throws IOException, ClassNotFoundException {
         //was wenn server ausfällt -> wie oben anpassen ... ggf alle über sendmessag2
         Message message = new Message(username, token, receiver, messageText);
-        return sendMessage2(message);
+        return sendMessageByObejct(message);
     }
 
-    public Message sendMessage2(Message message) throws IOException, ClassNotFoundException {
+    public Message sendMessageByObejct(Message message) throws IOException, ClassNotFoundException {
         TCPConnection socket = getConnection(0);
         Message answer = socket.sendMessage(message).receiveAnswer();
         if (message.getStatus().equals("SEND")) {

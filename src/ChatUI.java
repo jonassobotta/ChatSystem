@@ -153,7 +153,7 @@ public class ChatUI extends JFrame {
             String message = messageInputField.getText();
             messageInputField.setText("");
             try {
-                Message answer = clientLogic.sendMessage(message);
+                Message answer = clientLogic.sendMessageByString(message);
                 if(answer.getStatus().equals("FAILED")){
                     showBadConnectionPopup();
                 }

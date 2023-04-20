@@ -21,7 +21,7 @@ class ServerTest {
             clientLogic.setPassword("joel");
             clientLogic.checkUserData(0);
             clientLogic.setReceiver("luca");
-            clientLogic.sendMessage("Hallo");
+            clientLogic.sendMessageByString("Hallo");
             server1Two.start();
             wait(4000);
         } catch (Exception e) {
@@ -40,9 +40,9 @@ class ServerTest {
             clientLogic.setPassword("joel");
             clientLogic.checkUserData(0);
             clientLogic.setReceiver("luca");
-            clientLogic.sendMessage("Hallo");
+            clientLogic.sendMessageByString("Hallo");
             server1Two.stop();
-            clientLogic.sendMessage("Wie gehts");
+            clientLogic.sendMessageByString("Wie gehts");
             server1Two = new Server1("Server2");
             server1Two.start();
 

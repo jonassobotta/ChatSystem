@@ -100,7 +100,7 @@ public class Server1 extends Server {
             Message answer;
             try {
                 System.out.println("test");
-                answer = new TCPConnection(partnerServerList.get(0).getInetAddress(), partnerServerList.get(0).getPartnerPort()).sendMessage(new Message(this.serverName, this.serverToken, "REBOOT")).receiveAnswer();
+                answer = new TCPConnection(partnerServerList.get(0).getInetAddress(), partnerServerList.get(0).getPartnerPort()).sendMessage(new Message(this.serverName, this.serverToken, "REBOOT", this.messageStorage, this.userPortStorage)).receiveAnswer();
                 printOfServer("Server is updating with other server");
                 messageStorage.print();
                 if (answer.getMessageStorage() != null) messageStorage.join(answer.getMessageStorage());
@@ -149,6 +149,12 @@ public class Server1 extends Server {
                 this.messageStorage.print();
                 break;
             case "REBOOT":
+                if(message.getMessageStorage() != null){
+                    this.messageStorage.join(message.getMessageStorage());
+                }
+                if(message.getUserStorage() != null){
+                    this.userPortStorage.join(message.getUserStorage());
+                }
                 out.writeObject(new Message(this.serverName, this.serverToken, "OK", this.messageStorage, this.userPortStorage));
             default:
                 out.writeObject(new Message("FAILED"));
