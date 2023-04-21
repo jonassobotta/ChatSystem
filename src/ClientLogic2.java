@@ -143,18 +143,17 @@ public class ClientLogic2 extends Thread {
         int first = randomNumber();
         //Das muss nur zweimal probiert werden, wenn zwei Server down sind bringt es dem Client auch nichts sich mit dem dritten Server zu verbinden (MCS)
         try {
-            myConnection = new TCPConnection(partnerServerList.get(first).getInetAddress(), partnerServerList.get(first).getPartnerPort(), 4000);
+            myConnection = new TCPConnection(partnerServerList.get(first).getInetAddress(), partnerServerList.get(first).getPartnerPort());
             return myConnection;
         } catch (Exception e) {
             try {
-                myConnection = new TCPConnection(partnerServerList.get(getInverse(first)).getInetAddress(), partnerServerList.get(getInverse(first)).getPartnerPort(), 4000);
+                myConnection = new TCPConnection(partnerServerList.get(getInverse(first)).getInetAddress(), partnerServerList.get(getInverse(first)).getPartnerPort());
                 return myConnection;
             } catch (Exception e2) {
                 return getConnection(index + 1);
             }
         }
     }
-
     public static int randomNumber() {
         Random random = new Random();
         int randomNumber = random.nextInt(3);
