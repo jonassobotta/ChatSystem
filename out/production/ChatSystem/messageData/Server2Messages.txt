@@ -1,9 +1,0 @@
-joel;luca;1682087649576;hi luca
-luca;joel;1682087670054;hi joel
-joel;luca;1682087681207;wie gehts 
-joel;luca;1682087878908;hallo
-joel;luca;1682087886401;nochmal
-joel;luca;1682087919172;hallo
-joel;luca;1682088069328;hi
-joel;luca;1682088074857;hallo
-joel;luca;1682088125769;hi
