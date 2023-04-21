@@ -20,7 +20,7 @@ public class Server2 extends Server {
 
         //setup all partner server
         this.partnerServerList = new ArrayList<>();
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.81", 7777));
         this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
         this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 9999));
 
