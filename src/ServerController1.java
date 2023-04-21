@@ -32,6 +32,9 @@ public class ServerController1 {
                         server2.serverSocket.close();
                         server2.stop();
                         break;
+                    case "interrupt server 2":
+                        server2.interruptStatus = "interrupt";
+                        break;
                     default:
                         System.out.println("Ungültiger Befehl.");
                         break;

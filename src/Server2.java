@@ -66,6 +66,7 @@ public class Server2 extends Server {
             while (true) {
                 // Accept incoming client connections
                 Socket clientSocket = serverSocket.accept();
+                clientSocket.setSoTimeout(2000);
                 //printOfServer("Client connected from " + clientSocket.getInetAddress().getHostAddress());
                 if(interruptStatus.equals("interrupt")){
                     serverSocket.close();
@@ -96,7 +97,6 @@ public class Server2 extends Server {
                             //handel commands of user
                             handleClientCommands(message.getStatus(), message, out);
                         } else {
-                            printOfServer("something went wrong");
                             out.writeObject(new Message("FAILED"));
                         }
                     }

@@ -25,7 +25,6 @@ public class ChatUI2 extends JFrame {
 
     public ChatUI2() {
         this.ownInstance = this;
-
         clientLogic = new ClientLogic2(this);
         clientLogic.start();
 
@@ -82,9 +81,10 @@ public class ChatUI2 extends JFrame {
 
                 try {
                     clientLogic.serverSocket.close();
-                } catch (IOException ex) {
-                    throw new RuntimeException(ex);
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
                 }
+                clientLogic.stop();
                 clientLogic = new ClientLogic2(ownInstance);
                 clientLogic.start();
                 CardLayout cl = (CardLayout) panelCards.getLayout();
@@ -152,11 +152,14 @@ public class ChatUI2 extends JFrame {
             String message = messageInputField.getText();
             messageInputField.setText("");
             try {
+                System.out.println("wir senden jetzt");
                 Message answer = clientLogic.sendMessageByString(message);
-                if(answer.getStatus().equals("FAILED")){
+                if(answer.getStatus().equals("FAILED") || answer.getStatus().equals("CONNECTION_ERROR")){
+                    System.out.println("answer status failed");
                     showBadConnectionPopup();
                 }
             } catch (Exception error){
+                showBadConnectionPopup();
                 System.out.println("Could not send the message");
             }
 
@@ -264,6 +267,6 @@ public class ChatUI2 extends JFrame {
     }
 
     public static void main(String[] args) {
-        new ChatUI1();
+        new ChatUI2();
     }
 }

@@ -14,6 +14,13 @@ public class TCPConnection {
         this.out = new ObjectOutputStream(this.socket.getOutputStream());
         this.in = new ObjectInputStream(this.socket.getInputStream());
     }
+    public TCPConnection(String serverAddress, int port, int timeout) throws IOException {
+        this.socket = new Socket();
+        socket.connect(new InetSocketAddress(serverAddress, port));
+        socket.setSoTimeout(timeout);
+        this.out = new ObjectOutputStream(this.socket.getOutputStream());
+        this.in = new ObjectInputStream(this.socket.getInputStream());
+    }
     public TCPConnection sendMessage(Message message) throws IOException {
         this.out.writeObject(message);
         return this;

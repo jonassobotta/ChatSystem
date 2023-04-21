@@ -28,7 +28,7 @@ public class ClientLogic2 extends Thread {
         try {
             this.chatUI = chatUI;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
-            this.listenPort = -1;
+            this.listenPort = 0;
             this.messageStorage = new MessageStorage();
         } catch (Exception e) {
             System.out.println("Error in ClientLogic Konstruktor: " + e.getMessage());
@@ -61,36 +61,31 @@ public class ClientLogic2 extends Thread {
     }
 
     public void run() {
+        System.out.println("Writer running");
         try {
-            while (listenPort == -1 && !Thread.currentThread().isInterrupted()) {
+            while (listenPort == 0) {
                 sleep(1);
             }
             serverSocket = new ServerSocket(listenPort);
-            System.out.println("Listenserver created with port " + serverSocket.getLocalPort());
-            while (!Thread.currentThread().isInterrupted()) {
-                try{
-                    Socket clientSocket = serverSocket.accept();
-                    // Get input and output streams to communicate with the client
-                    ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                    ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-                    Message message = (Message) in.readObject();
-                    if(message.getStatus() != null && message.getStatus().equals("INTERRUPT")){
-                        this.interrupt();
-                    }else{
-                        addMessageToHistory(message);
-                        chatUI.updateChatList();
-                    }
-                    in.close();
-                    out.close();
-                    clientSocket.close();
-                }catch (Exception e){
-                    System.out.println("server socket closed -> please interrupt Thread");
-                }
+            System.out.println("Listenserver created with port " + listenPort);
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                clientSocket.setSoTimeout(1000);
+                // Get input and output streams to communicate with the client
+                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+                Message message = (Message) in.readObject();
+                addMessageToHistory(message);
+                chatUI.updateChatList();
+
+                in.close();
+                out.close();
+                clientSocket.close();
+
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
-
     }
 
 
@@ -135,7 +130,7 @@ public class ClientLogic2 extends Thread {
         TCPConnection socket = getConnection(0);
 
         Message answer = socket.sendMessage(message).receiveAnswer();
-        if (message.getStatus().equals("SEND")) {
+        if (message.getStatus().equals("SEND") && answer.getStatus().equals("OK")) {
             addMessageToHistory(message);
         }
         return answer;
@@ -148,11 +143,11 @@ public class ClientLogic2 extends Thread {
         int first = randomNumber();
         //Das muss nur zweimal probiert werden, wenn zwei Server down sind bringt es dem Client auch nichts sich mit dem dritten Server zu verbinden (MCS)
         try {
-            myConnection = new TCPConnection(partnerServerList.get(first).getInetAddress(), partnerServerList.get(first).getPartnerPort());
+            myConnection = new TCPConnection(partnerServerList.get(first).getInetAddress(), partnerServerList.get(first).getPartnerPort(), 4000);
             return myConnection;
         } catch (Exception e) {
             try {
-                myConnection = new TCPConnection(partnerServerList.get(getInverse(first)).getInetAddress(), partnerServerList.get(getInverse(first)).getPartnerPort());
+                myConnection = new TCPConnection(partnerServerList.get(getInverse(first)).getInetAddress(), partnerServerList.get(getInverse(first)).getPartnerPort(), 4000);
                 return myConnection;
             } catch (Exception e2) {
                 return getConnection(index + 1);

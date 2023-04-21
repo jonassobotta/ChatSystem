@@ -1,28 +1,9 @@
-joel;jonas;1681998599360;hi jonas
-joel;jonas;1681998686696;hi Joel
-joel;jonas;1681998828825;Sorry, ich meinte Jonas. Ich habe mich ja von einem anderen Gerät angemeldet
-jonas;joel;1681998846169;achso, cool dass das geht
-jonas;joel;1681998851010;:)
-joel;jonas;1681998852595;ja, super!
-jonas;joel;1681998872935;bist du noch da?
-joel;luca;1681998467154;hi luca
-luca;joel;1681998528955;hi Joel
-joel;luca;1681998545711;wie gehts?
-luca;joel;1681998559121;mir gehts gut, danke. Wie geht es dir?
-joel;luca;1682077603180;INTERRUPT
-joel;luca;1682077646983;test
-joel;luca;1682077670030;oijh
-joel;luca;1682078564910;hi
-joel;luca;1682078642414;DELAY
-joel;luca;1682078743677;DELAY
-joel;luca;1682078820233;DELAY
-joel;luca;1682078853791;DELAY
-joel;luca;1682079123179;DELAY
-joel;luca;1682079206116;DELAY
-joel;luca;1682079263021;moin
-joel;luca;1682079269317;moin
-joel;luca;1682079410083;joel
-joel;luca;1682079555611;moin
-joel;luca;1682079579479;iuztrfdghjk
-joel;luca;1682079645379;fghjk
-joel;luca;1682079661911;gfdes
+joel;luca;1682087649576;hi luca
+luca;joel;1682087670054;hi joel
+joel;luca;1682087681207;wie gehts 
+joel;luca;1682087878908;hallo
+joel;luca;1682087886401;nochmal
+joel;luca;1682087919172;hallo
+joel;luca;1682088069328;hi
+joel;luca;1682088074857;hallo
+joel;luca;1682088125769;hi
