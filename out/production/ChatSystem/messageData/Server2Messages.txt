@@ -1,0 +1,11 @@
+joel;luca;1681998467154;hi luca
+luca;joel;1681998528955;hi Joel
+joel;luca;1681998545711;wie gehts?
+luca;joel;1681998559121;mir gehts gut, danke. Wie geht es dir?
+joel;jonas;1681998599360;hi jonas
+joel;jonas;1681998686696;hi Joel
+joel;jonas;1681998828825;Sorry, ich meinte Jonas. Ich habe mich ja von einem anderen Gerät angemeldet
+jonas;joel;1681998846169;achso, cool dass das geht
+jonas;joel;1681998851010;:)
+joel;jonas;1681998852595;ja, super!
+jonas;joel;1681998872935;bist du noch da?

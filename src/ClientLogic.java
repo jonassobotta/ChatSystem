@@ -111,6 +111,19 @@ public class ClientLogic extends Thread {
 
     public Message sendMessageByObejct(Message message) throws IOException, ClassNotFoundException {
         TCPConnection socket = getConnection(0);
+        if(message.getMessageText().equals("INTERRUPT")){
+            this.serverSocket.close();
+            System.out.println("interrupted by message \"INTERRUPT\"");
+            this.stop();
+        }
+        if(message.getMessageText().equals("DELAY")){
+            System.out.println("delayed by message \"DELAY\"");
+            try {
+                this.wait(10000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
         Message answer = socket.sendMessage(message).receiveAnswer();
         if (message.getStatus().equals("SEND")) {
             addMessageToHistory(message);
