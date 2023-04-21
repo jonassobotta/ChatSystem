@@ -47,55 +47,59 @@ public class Server1 extends Server {
             serverReconnection();
 
             while (true) {
-                // Accept incoming client connections
-                Socket clientSocket = serverSocket.accept();
-                printOfServer("Client connected from " + clientSocket.getInetAddress().getHostAddress());
-                if(interruptStatus.equals("interrupt")){
-                    serverSocket.close();
-                    interruptStatus = "";
-                    printOfServer("interrupted by server controller");
-                    this.stop();
-                }
-                // Get input and output streams
-                ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-                ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
-
-                // Read messages from the client and handle commands
-                Message message = (Message) in.readObject();
-
-                //check if user is listed
-                boolean validUser = false;
-                for (User user : userList) {
-                    if (user.validate(message.getSender(), message.getToken())) validUser = true;
-                }
-                if (validUser == true) {
-                    //ad user port to list
-                    if (message.getReciver() != null && message.getReciver().equals(message.getSender())) {
-                        //report error if sender and receiver are the same user
-                        out.writeObject(new Message("FAILED"));
-                    } else {
-                        //assign listen port to user
-                        assignListenPort(message, clientSocket.getInetAddress(), clientSocket);
-
-                        //handel commands of user
-                        handleClientCommands(message.getStatus(), message, out);
+                try {
+                    // Accept incoming client connections
+                    Socket clientSocket = serverSocket.accept();
+                    clientSocket.setSoTimeout(1000);
+                    printOfServer("Client connected from " + clientSocket.getInetAddress().getHostAddress());
+                    if (interruptStatus.equals("interrupt")) {
+                        serverSocket.close();
+                        interruptStatus = "";
+                        printOfServer("interrupted by server controller");
+                        this.stop();
                     }
-                } else {
-                    printOfServer("invalid user");
-                    out.writeObject(new Message("INVALID_USER"));
+                    // Get input and output streams
+                    ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+                    ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+
+                    // Read messages from the client and handle commands
+                    Message message = (Message) in.readObject();
+
+                    //check if user is listed
+                    boolean validUser = false;
+                    for (User user : userList) {
+                        if (user.validate(message.getSender(), message.getToken())) validUser = true;
+                    }
+                    if (validUser == true) {
+                        //ad user port to list
+                        if (message.getReciver() != null && message.getReciver().equals(message.getSender())) {
+                            //report error if sender and receiver are the same user
+                            out.writeObject(new Message("FAILED"));
+                        } else {
+                            //assign listen port to user
+                            assignListenPort(message, clientSocket.getInetAddress(), clientSocket);
+
+                            //handel commands of user
+                            handleClientCommands(message.getStatus(), message, out);
+                        }
+                    } else {
+                        printOfServer("invalid user");
+                        out.writeObject(new Message("INVALID_USER"));
+                    }
+                    // Close the client socket and streams
+                    in.close();
+                    out.close();
+                    clientSocket.close();
+
+                    printOfServer("Client disconnected");
+
+                    if (message.getSender().contains("Server") == false) System.out.println();
+                }catch (SocketTimeoutException exception){
+                    printOfServer("Timeout: " + exception.getMessage());
                 }
-                // Close the client socket and streams
-                in.close();
-                out.close();
-                clientSocket.close();
-
-                printOfServer("Client disconnected");
-
-                if (message.getSender().contains("Server") == false) System.out.println();
             }
         } catch (Exception e) {
             printOfServer("Server closed");
-            printOfServer("Error: " + e.getMessage());
         }
     }
 
