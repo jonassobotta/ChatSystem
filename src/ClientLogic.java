@@ -95,7 +95,7 @@ public class ClientLogic extends Thread {
     }
     public String checkUserData() throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history if userdata is correct
-        Message answer = sendMessageByObejct(new Message(username, token, "GET"));
+        Message answer = sendMessageByObject(new Message(username, token, "GET"));
         if (answer.getStatus().equals("OK")) {
             //add history
             listenPort = answer.getPort();
@@ -106,10 +106,10 @@ public class ClientLogic extends Thread {
 
     public Message sendMessageByString(String messageText)  {
         Message message = new Message(username, token, receiver, messageText);
-        return sendMessageByObejct(message);
+        return sendMessageByObject(message);
     }
 
-    public Message sendMessageByObejct(Message message)  {
+    public Message sendMessageByObject(Message message)  {
         TCPConnection socket = null;
         Message answer = null;
         try{
@@ -137,7 +137,7 @@ public class ClientLogic extends Thread {
                 message.setMessageText("clientDelaySecondTry");
             }
             System.out.println("Could not send message, trying again");
-            return sendMessageByObejct(message);
+            return sendMessageByObject(message);
         }
         //Wenn der User etwas schreibt wird es auch hinzu gefügt
         if (message.getStatus().equals("SEND")) {

@@ -22,9 +22,9 @@ public class ClientLogic2 extends Thread {
 
     public ClientLogic2(ChatUI2 chatUI) {
         this.partnerServerList = new ArrayList<>();
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.81", 7777));
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 9999));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 7777));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 8888));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 9999));
         try {
             this.chatUI = chatUI;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
@@ -92,7 +92,7 @@ public class ClientLogic2 extends Thread {
         this.messageStorage.addMessage(message, this.username);
         chatUI.initializeChatView();
     }
-    public String checkUserData(int index) throws IOException, ClassNotFoundException {
+    public String checkUserData() throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
 
         Message answer = sendMessageByObject(new Message(username, token, "GET"));
@@ -104,15 +104,42 @@ public class ClientLogic2 extends Thread {
         return answer.getStatus();
     }
 
-    public Message sendMessageByString(String messageText) throws IOException, ClassNotFoundException {
+    public Message sendMessageByString(String messageText) {
         Message message = new Message(username, token, receiver, messageText);
         return sendMessageByObject(message);
     }
 
-    public Message sendMessageByObject(Message message) throws IOException, ClassNotFoundException {
-        TCPConnection socket = getConnection(0);
+    public Message sendMessageByObject(Message message){
+        TCPConnection socket = null;
+        Message answer = null;
+        try{
+            socket = getConnection(0);
+        }catch(Exception e){
+            System.out.println("Could not connect to any server");
+            return new Message("FAILED");
+        }
+        //Für Demo Zwecke
+        if(message.getMessageText() != null){
+            if(message.getMessageText().equals("INTERRUPT")){
+                System.out.println("interrupted by message \"INTERRUPT\"");
+                return new Message("FAILED");
+            }
+            if(message.getMessageText().equals("DELAY")){
+                System.out.println("delayed by message \"DELAY\"");
+                sieveOfEratosthenes(1000000000); //Advanced Delay ;)
+                System.out.println("try to send delayed message");
+            }
+        }
+        try{
+            answer = socket.sendMessage(message).receiveAnswer();
+        }catch(Exception e){
+            if(message.getMessageText().equals("DELAY")){
+                message.setMessageText("clientDelaySecondTry");
+            }
+            System.out.println("Could not send message, trying again");
+            return sendMessageByObject(message);
+        }
 
-        Message answer = socket.sendMessage(message).receiveAnswer();
         if (message.getStatus().equals("SEND") && answer.getStatus().equals("OK")) {
             addMessageToHistory(message);
         }
@@ -120,8 +147,8 @@ public class ClientLogic2 extends Thread {
     }
 
 
-    public TCPConnection getConnection(int index) {
-        if (index == 2) return null;
+    public TCPConnection getConnection(int index) throws IOException{
+        if (index == 2) throw new IOException();
         TCPConnection myConnection;
         int first = randomNumber();
         //Das muss nur zweimal probiert werden, wenn zwei Server down sind bringt es dem Client auch nichts sich mit dem dritten Server zu verbinden (MCS)
@@ -183,6 +210,22 @@ public class ClientLogic2 extends Thread {
             e.printStackTrace();
             return null;
         }
+    }
+    public static void sieveOfEratosthenes(int limit) {
+        boolean[] prime = new boolean[limit + 1];
+        for(int i = 0; i < limit; i++) {
+            prime[i] = true;
+        }
+
+        for(int p = 2; p * p <= limit; p++) {
+            if(prime[p] == true) {
+                for(int i = p * p; i <= limit; i += p) {
+                    prime[i] = false;
+                }
+            }
+        }
+
+        System.out.println(prime[0]);
     }
 
 }

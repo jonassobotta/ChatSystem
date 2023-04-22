@@ -3,3 +3,15 @@ joel;luca;1682194148529;clientDelaySecondTry
 joel;luca;1682194213495;hi
 luca;joel;1682194233122;we
 luca;joel;1682194717053;sdf
+luca;joel;1682194763280;clientDelaySecondTry
+luca;joel;1682196521318;sdfsdf
+luca;joel;1682197399035;sdfsdfsdfsdf
+luca;joel;1682197401920;hi
+luca;joel;1682197440258;clientDelaySecondTry
+luca;joel;1682197637185;sdf
+luca;joel;1682197741503;s
+luca;joel;1682197906413;s
+luca;joel;1682198054917;s
+luca;joel;1682198191141;clientDelaySecondTry
+luca;joel;1682198191141;clientDelaySecondTry
+luca;joel;1682198191141;clientDelaySecondTry

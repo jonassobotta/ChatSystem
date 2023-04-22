@@ -152,7 +152,6 @@ public class ChatUI2 extends JFrame {
             String message = messageInputField.getText();
             messageInputField.setText("");
             try {
-                System.out.println("wir senden jetzt");
                 Message answer = clientLogic.sendMessageByString(message);
                 if(answer.getStatus().equals("FAILED") || answer.getStatus().equals("CONNECTION_ERROR")){
                     System.out.println("answer status failed");
@@ -180,7 +179,7 @@ public class ChatUI2 extends JFrame {
             clientLogic.setPassword(password);
 
             try {
-                String stateOfConnection = clientLogic.checkUserData(0);
+                String stateOfConnection = clientLogic.checkUserData();
                 if (stateOfConnection.equals("OK")) {
                     //weiter
                     labelHeaderUserName.setText(username);
