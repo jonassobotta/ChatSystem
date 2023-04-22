@@ -22,8 +22,8 @@ public class ClientLogic extends Thread {
     public ClientLogic(ChatUI1 chatUI) {
         try {
             this.partnerServerList = new ArrayList<>();
-            this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
-            this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
+            this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 7777));
+            this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 8888));
             this.chatUI = chatUI;
             this.reader = new BufferedReader(new InputStreamReader(System.in));
             this.listenPort = 0;
@@ -104,7 +104,7 @@ public class ClientLogic extends Thread {
         return answer.getStatus();
     }
 
-    public Message sendMessageByString(String messageText) throws IOException, ClassNotFoundException {
+    public Message sendMessageByString(String messageText)  {
         Message message = new Message(username, token, receiver, messageText);
         return sendMessageByObejct(message);
     }
@@ -115,7 +115,7 @@ public class ClientLogic extends Thread {
         try{
             socket = getConnection(0);
         }catch(Exception e){
-
+            System.out.println();
         }
         //Für Demo Zwecke
         if(message.getMessageText() != null){
@@ -136,7 +136,7 @@ public class ClientLogic extends Thread {
                 message.setMessageText("clientDelaySecondTry");
             }
             System.out.println("Could not send message, trying again");
-            sendMessageByObejct(message);
+            return sendMessageByObejct(message);
         }
         //Wenn der User etwas schreibt wird es auch hinzu gefügt
         if (message.getStatus().equals("SEND")) {
