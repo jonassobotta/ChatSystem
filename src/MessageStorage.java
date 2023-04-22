@@ -204,7 +204,7 @@ public class MessageStorage implements Serializable{
         }
         return chatPartners;
     }
-    //TODO: Fehlerbehandlung
+    //joint zwei storages, durch die map sind dopplungen nicht möglich
     public void join(MessageStorage otherStorage, String servername) {
         if(otherStorage != null){
             // Join the chat messages

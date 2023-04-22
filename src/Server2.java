@@ -165,7 +165,6 @@ public class Server2 extends Server {
         }
         return true;
     }
-//TODO: Schauen wo guckt er dass er die aktuellere inet adresse hat
     private boolean syncUserInetAdress(String sender, InetAddress inetAddress, int assignedPort) {
         try {
             TCPConnection connection = getConnection(0);
@@ -206,6 +205,9 @@ public class Server2 extends Server {
                 }
                 break;
             case "SYNC_USER":
+                //Normalerweise könnte man die User Abfrage als Read Befehl in einem verteilten System verstehen
+                //Hier wegen den Variablen Inet Adressen als Write Befehlt
+                //-> Wenn die Inet Adresse von dem Client nicht mit der im Partnerserver übereinstimmt, wird sie beim Partnerserver geändert
                 if (this.userPortStorage.containsUser(message.getUsername())) {
                     if (this.userPortStorage.getUser(message.getUsername()).getInetAddress().equals(message.getInetAddress())) {
                         out.writeObject(new Message(this.serverName, this.serverToken, message.getSender(), this.userPortStorage.getUser(message.getUsername()), "AVAILABLE"));

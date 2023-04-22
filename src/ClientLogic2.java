@@ -61,7 +61,7 @@ public class ClientLogic2 extends Thread {
     }
 
     public void run() {
-        System.out.println("Writer running");
+        System.out.println("client logic started");
         try {
             while (listenPort == 0) {
                 sleep(1);
@@ -88,24 +88,10 @@ public class ClientLogic2 extends Thread {
         }
     }
 
-
     public void addMessageToHistory(Message message) {
         this.messageStorage.addMessage(message, this.username);
         chatUI.initializeChatView();
     }
-//TODO: sollen wir das entfernen oder sagen dass das die Idee noch war
-    public boolean getServers() throws IOException, ClassNotFoundException {
-        //send message with userdata to random server and receive all chat history
-        Message answer = sendMessageByObject(new Message(username, token, "WHERE_ARE_YOU"));
-        if (answer.getStatus().equals("OK")) {
-            //add history
-            listenPort = answer.getPort();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public String checkUserData(int index) throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
 

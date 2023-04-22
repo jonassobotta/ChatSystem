@@ -165,4 +165,8 @@ public class Message implements Serializable {
     public UserStorage.Body getBody() {
         return body;
     }
+
+    public void setMessageText(String messageText){
+        this.messageText = messageText;
+    }
 }

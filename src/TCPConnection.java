@@ -9,7 +9,6 @@ public class TCPConnection {
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
-    //TODO: Warum hier nochmal zwei
     public TCPConnection(String serverAddress, int port) throws IOException {
         this.socket = new Socket();
         socket.connect(new InetSocketAddress(serverAddress, port), 1000);

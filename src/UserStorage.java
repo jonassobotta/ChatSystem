@@ -110,7 +110,6 @@ public class UserStorage implements Serializable {
         public void setPort(int port) {
             this.port = port;
         }
-        //TODO: für was hier equals und hashCode?
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -150,8 +149,8 @@ public class UserStorage implements Serializable {
 
         return sb.toString();
     }
-
-    public void join(UserStorage other,String servername) { //Falls bei Read User zwei server unterschiedliches inet adresse von einem user haben wird die neuste genommen
+    //Falls bei Read User zwei server unterschiedliches inet adresse von einem user haben wird die neuste genommen
+    public void join(UserStorage other,String servername) {
         for (String username : other.map.keySet()) {
             Body otherBody = other.map.get(username);
             if (map.containsKey(username)) {
@@ -203,7 +202,6 @@ public class UserStorage implements Serializable {
 
         return userStorage;
     }
-//TODO: für was hier equals und hashCode?, related problems
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

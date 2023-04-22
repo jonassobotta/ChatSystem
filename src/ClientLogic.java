@@ -57,10 +57,9 @@ public class ClientLogic extends Thread {
     public String getUsername() {
         return username;
     }
-//TODO: ist das nicht eher reader running?
     //TODO: iwo das mit unseren timeouts erwähnen... vllt in doku
     public void run() {
-        System.out.println("Writer running");
+        System.out.println("client logic started");
         try {
             //Startet erst dann wenn ihm der Port vom Server zugewiesen wurde
             while (listenPort == 0) {
@@ -94,8 +93,7 @@ public class ClientLogic extends Thread {
         //UI aktuallisiert wenn neue message empfangen wird
         chatUI.initializeChatView();
     }
-//TODO: hier den index raus?
-    public String checkUserData(int index) throws IOException, ClassNotFoundException {
+    public String checkUserData() throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history if userdata is correct
         Message answer = sendMessageByObejct(new Message(username, token, "GET"));
         if (answer.getStatus().equals("OK")) {
@@ -111,8 +109,14 @@ public class ClientLogic extends Thread {
         return sendMessageByObejct(message);
     }
 
-    public Message sendMessageByObejct(Message message) throws IOException, ClassNotFoundException {
-        TCPConnection socket = getConnection(0);
+    public Message sendMessageByObejct(Message message)  {
+        TCPConnection socket = null;
+        Message answer = null;
+        try{
+            socket = getConnection(0);
+        }catch(Exception e){
+
+        }
         //Für Demo Zwecke
         if(message.getMessageText() != null){
             if(message.getMessageText().equals("INTERRUPT")){
@@ -125,7 +129,15 @@ public class ClientLogic extends Thread {
                 System.out.println("try to send delayed message");
             }
         }
-        Message answer = socket.sendMessage(message).receiveAnswer();
+        try{
+            answer = socket.sendMessage(message).receiveAnswer();
+        }catch(Exception e){
+            if(message.getMessageText().equals("DELAY")){
+                message.setMessageText("clientDelaySecondTry");
+            }
+            System.out.println("Could not send message, trying again");
+            sendMessageByObejct(message);
+        }
         //Wenn der User etwas schreibt wird es auch hinzu gefügt
         if (message.getStatus().equals("SEND")) {
             addMessageToHistory(message);

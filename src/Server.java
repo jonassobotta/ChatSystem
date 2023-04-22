@@ -47,7 +47,6 @@ public abstract class Server extends Thread {
         }
         return num;
     }
-    //TODO: Macht hier random Number sinn ... auch inverse
     public static int randomNumber() {
         Random random = new Random();
         int randomNumber = random.nextInt(2);

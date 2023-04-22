@@ -130,12 +130,12 @@ public class Server1 extends Server {
         if (userPortStorage.containsUser(message.getSender()) == false && message.getSender().contains("Server") == false) {
             int assignedPort = generateUniqueRandomNumber();
             printOfServer("Assigned port: " + Integer.toString(assignedPort) + " to user " + message.getSender());
-            //TODO: warum nur hier der sync und nicht auch bei dem else if
             syncUserPortStorage(message.getSender(), inetAddress, assignedPort);
         //Falls der User schon in der Storage ist, aber sich von einem anderen Gerät anmeldet, wird seine InetAddress geändert
         } else if (userPortStorage.containsUser(message.getSender()) && inetAddress.equals(userPortStorage.getUser(message.getSender()).getInetAddress()) == false) {
             userPortStorage.getUser(message.getSender()).setInetAddress(client.getInetAddress());
             printOfServer("Changed InetAddress from " + message.getSender() + " to " + client.getInetAddress());
+            syncUserPortStorage(message.getSender(), inetAddress, userPortStorage.getUser(message.getSender()).getPort());
         }
         //Sonst muss nichts passieren
         return true;
@@ -154,13 +154,11 @@ public class Server1 extends Server {
             //Client will message senden
             case "SEND":
                 this.messageStorage.addMessage(message, this.serverName);
-                syncServerMessageStorage(message);
                 sendMessageToReceiver(message);
+                syncServerMessageStorage(message);
                 out.writeObject(new Message("OK"));
                 break;
-            //TODO: warum adden wir da eine message
             case "SYNC_USER":
-                this.messageStorage.addMessage(message, this.serverName);
                 this.userPortStorage.addUser(message.getUsername(), message.getInetAddress(), message.getPort(), this.serverName);
                 printOfServer(this.userPortStorage.print());
                 break;
@@ -185,7 +183,6 @@ public class Server1 extends Server {
                 break;
         }
     }
-    //TODO: macht das hier überhaupt sinn? bzw. weiß selbst nicht mehr wie das genau umgesetzt wurde
     private void syncUserPortStorage(String sender, InetAddress inetAddress, int assignedPort) {
         userPortStorage.addUser(sender, inetAddress, assignedPort, this.serverName);
         new Thread(() -> {
@@ -216,7 +213,6 @@ public class Server1 extends Server {
             }
         }).start();
     }
-    //TODO: macht das hier überhaupt sinn? bzw. weiß selbst nicht mehr wie das genau umgesetzt wurde
     private void syncServerMessageStorage(Message message) {
         new Thread(() -> {
             try {
