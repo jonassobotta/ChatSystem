@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-
+//Für gute Steuerung der Server
 public class ServerController2 {
     public static void main(String[] args) {
         ArrayList<Server2> serverList = new ArrayList<>();

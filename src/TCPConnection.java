@@ -3,10 +3,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+//TCP Connection ausgelagert
+//Methoden machen das was der Name sagt
 public class TCPConnection {
     private Socket socket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
+    //TODO: Warum hier nochmal zwei
     public TCPConnection(String serverAddress, int port) throws IOException {
         this.socket = new Socket();
         socket.connect(new InetSocketAddress(serverAddress, port), 1000);

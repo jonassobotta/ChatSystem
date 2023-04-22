@@ -19,11 +19,11 @@ public abstract class Server extends Thread {
 
         this.serverName = serverName;
 
-        //initialize storage components
         this.userPortStorage = new UserStorage();
         this.messageStorage = new MessageStorage();
 
-        //initialize and setup user with password and token
+        //User mit Passwörtern erstellen, auch für Server
+        //Passwörter als Hash
         userList.add(new User("joel", "f11a60c74bca3ace583fac190409a5c32f83e61e1d2f7097de9674ad2c4ea877"));//Passwort ist JoelPw
         userList.add(new User("jonas", "1c461504c316958f1b46ce6f387dde8981ee548572a682a69abf708ecb3ca94c"));//Passwort ist JonasPw
         userList.add(new User("luca", "bb525174242421707805642da8e45a984bcef043ed6235476d00e9b626ae520d"));//Passwort ist LucaPw
@@ -33,9 +33,9 @@ public abstract class Server extends Thread {
         userList.add(new User("Server3", "2c8b7961168c40b75911c208b59be1083b540d496a6e0d28c26d3a53562a15aa"));//Passwort ist joel
     }
 
-
+    //4 Stellige Zufallszahl generieren die noch nicht verwendet wurde
+    //Für Port
     public int generateUniqueRandomNumber() {
-        //get random 4 digit number, but never the same
         Random rand = new Random();
         int num;
         do {
@@ -47,7 +47,7 @@ public abstract class Server extends Thread {
         }
         return num;
     }
-
+    //TODO: Macht hier random Number sinn ... auch inverse
     public static int randomNumber() {
         Random random = new Random();
         int randomNumber = random.nextInt(2);

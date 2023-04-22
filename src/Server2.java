@@ -1,7 +1,8 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
-
+//Ähnlich zu Server1 -> Es werden nicht alle Kommentare wiederholt
+//Hier können die sync methoden nicht in threads ausgelagert werden
 public class Server2 extends Server {
     private String startStatus;
     private ArrayList<ConnectionInetPortList> partnerServerList;
@@ -93,6 +94,7 @@ public class Server2 extends Server {
                         out.writeObject(new Message("FAILED"));
                     } else {
                         //assign listen port to user
+                        //Überprüft dabei auch, dass ein weiterer Server erreichbar ist
                         if (message.getSender().contains("Server") || assignListenPort(message, clientSocket.getInetAddress(), clientSocket)) {
                             //handel commands of user
                             handleClientCommands(message.getStatus(), message, out);
@@ -123,7 +125,7 @@ public class Server2 extends Server {
 
         this.messageStorage = MessageStorage.readFromTextFile(this.serverName);
         this.userPortStorage = UserStorage.readFromTextFile(this.serverName);
-
+//TODO: Hier in der Doku schreiben dass wir es früher mit join gemacht haben und ganz ohne text datein ... bei mcs dann beiden anderen server nötig
         /*try {
             TCPConnection server1 = new TCPConnection(partnerServerList.get(0).getInetAddress(), partnerServerList.get(0).getPartnerPort());
             TCPConnection server2 = new TCPConnection(partnerServerList.get(1).getInetAddress(), partnerServerList.get(1).getPartnerPort());
@@ -145,7 +147,7 @@ public class Server2 extends Server {
             printOfServer("Server Error, please contact system admin");
         }*/
     }
-
+//TODO: Irgendwo hatten wir noch dass wegen unseren wechselden ports ein befehl als schreiben gilt obwohl es eigentlich lesen ist ... vllt auch bei aufgabe 1?
     private boolean assignListenPort(Message message, InetAddress inetAddress, Socket client) {
         if (userPortStorage.containsUser(message.getSender()) == false && message.getSender().contains("Server") == false) {
             int assignedPort = generateUniqueRandomNumber();
@@ -163,7 +165,7 @@ public class Server2 extends Server {
         }
         return true;
     }
-
+//TODO: Schauen wo guckt er dass er die aktuellere inet adresse hat
     private boolean syncUserInetAdress(String sender, InetAddress inetAddress, int assignedPort) {
         try {
             TCPConnection connection = getConnection(0);
@@ -180,6 +182,8 @@ public class Server2 extends Server {
     private void handleClientCommands(String inputCommand, Message message, ObjectOutputStream out) throws IOException {
         printOfServer("input command: " + inputCommand);
         switch (inputCommand) {
+            //In den If abfragen wird überprüft ob ein anderer Server erreichbar ist, wenn nicht wird dem Nutzer
+            //ein Fehler ausgegeben
             case "GET":
                 if (getMessageStorrageFromOtherServer()) {
                     MessageStorage relevantMsg = this.messageStorage.getChatsForUser(message.getSender());
@@ -239,7 +243,7 @@ public class Server2 extends Server {
                 break;
         }
     }
-
+//liest nachrichten von einem anderen server
     private boolean getMessageStorrageFromOtherServer() {
         try {
             TCPConnection connection = getConnection(0);
@@ -251,7 +255,7 @@ public class Server2 extends Server {
             return false;
         }
     }
-
+//TODO: hier ist das mit schreiben anstatt lesen (aber blicke es selbst nicht mehr ganz)
     private boolean syncUserPortStorage(String sender, InetAddress inetAddress, int assignedPort) {
         Message answer;
         TCPConnection connection = getConnection(0);

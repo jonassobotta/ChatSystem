@@ -1,6 +1,7 @@
 import java.io.Serializable;
 import java.net.InetAddress;
-
+//Die Message-Klasse repräsentiert eine Chat-Nachricht
+//Damit können verschiedene Arten von Nachrichten zwischen Clients und Server übertragen werden.
 public class Message implements Serializable {
 
     private String username;
@@ -98,9 +99,9 @@ public class Message implements Serializable {
         this.messageText = messageText;
         this.timestamp = timestamp;
     }
-
+//Gibt die Zeit der Nachricht in einem formatierten String zurück
+//Dadurch muss kein weiterer import für die Zeitformatierung gemacht werden
     public String getFormatChatMessageTime() {
-        // Extrahiere Stunden, Minuten und Sekunden aus dem timestamp
         long seconds = this.timestamp / 1000;
         long minutes = seconds / 60;
         long hours = minutes / 60;
@@ -108,10 +109,8 @@ public class Message implements Serializable {
         minutes %= 60;
         hours %= 24;
 
-        // Erstelle einen formatierten String für die Uhrzeit
         String formattedTime = String.format("%02d:%02d:%02d", hours, minutes, seconds);
 
-        // Gib den formatierten String zurück
         return formattedTime;
     }
 

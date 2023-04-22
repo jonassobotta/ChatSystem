@@ -9,13 +9,16 @@ public class MessageStorage implements Serializable{
 
     private Map<String, Chat> storage;
     private ArrayList<String> userList;
+//Ein Message Storage besteht aus einer TreeMap, die die Nachrichten speichert. Und einer ArrayList, die die User speichert.
+//Die Storage TreeMap hat als Key einen String, der aus dem Sender und dem Empfänger besteht. Der Value ist ein Chat-Objekt.
+//Ein Chat-Objekt besteht aus einer TreeMap, die die Nachrichten speichert.
 
     public MessageStorage() {
         storage = new TreeMap<>();
         userList = new ArrayList<>();
 
     }
-
+//Durchsucht den storage nach Chats, an denen der übergebene Benutzer beteiligt ist, und gibt diese als MessageStorage zurück.
     public MessageStorage getChatsForUser(String user) {
         MessageStorage result = new MessageStorage();
         for (Map.Entry<String, Chat> entry : storage.entrySet()) {
@@ -34,7 +37,9 @@ public class MessageStorage implements Serializable{
 
         return result;
     }
-
+//Fügt eine Nachricht zur entsprechenden Chat-Konversation in der storage-Map hinzu und aktualisiert auch die userList.
+//Wenn die Nachricht von einem Server kommt, wird sie auch in eine Textdatei geschrieben.
+//Dadurch wird sichergestellt, dass die Nachrichten auch nach einem Neustart des Servers erhalten bleiben.
     public void addMessage(Message message, String serverName) {
         if(message.getReciver().contains("Server") == false){
             String userCombination = getUserCombinationKey(message.getSender(), message.getReciver());
@@ -50,6 +55,11 @@ public class MessageStorage implements Serializable{
             }
         }
     }
+//Schreibt alle Nachrichten die in der storage-Map gespeichert sind in eine Textdatei.
+//Das wird benutzt um bei Aufgabe 1 die Nachrichten nach einem Neustart des anderen Servers in die Textdatei zu schreiben.
+//Die beiden Server sollen ja den gleichen Speicher haben und es kann sein,
+//dass in der Zwischenzeit etwas auf den anderen Server geschrieben wurde.
+//Die Textdatei ist so strukturiert, dass sie leicht gelesen werden kann.
     public void writeToFile(String serverName) {
         String os = System.getProperty("os.name").toLowerCase();
         String trenner;
@@ -93,7 +103,7 @@ public class MessageStorage implements Serializable{
         }
     }
 
-
+//Schreibt eine Nachricht in die Textdatei.
     private void addMessageToTextFile(Message message, String serverName) {
         String os = System.getProperty("os.name").toLowerCase();
         String trenner;
@@ -127,7 +137,7 @@ public class MessageStorage implements Serializable{
     }
 
 
-
+//Gibt eine TreeMap mit allen Nachrichten zwischen zwei Benutzern zurück
     public TreeMap<UniqueTimestamp, Message> getMessages(String userOne, String userTwo) {
         String userCombination = getUserCombinationKey(userOne, userTwo);
         Chat chat = storage.get(userCombination);
@@ -136,11 +146,11 @@ public class MessageStorage implements Serializable{
         }
         return chat.getMessages();
     }
-
+//Macht es ist egal in welcher Reihenfolge die Benutzer angegeben werden
     private String getUserCombinationKey(String userOne, String userTwo) {
         return userOne.compareTo(userTwo) < 0 ? userOne + ":" + userTwo : userTwo + ":" + userOne;
     }
-
+    //Die Chat TreeMap hat als Key einen Timestamp und als Value eine Message.
     public class Chat implements Serializable {
         private TreeMap<UniqueTimestamp, Message> chat;
 
@@ -157,6 +167,8 @@ public class MessageStorage implements Serializable{
             return chat;
         }
     }
+    //Die print Methode gibt Storage als String zurück, damit die Ausgabe in der Konsole übersichtlich ist.
+    //Sonst könnte es sein, dass eine andere Ausgabe in der Konsole dazwischen kommt.
     public String print() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(" \n === Message Storage ===\n");
@@ -176,6 +188,7 @@ public class MessageStorage implements Serializable{
         stringBuilder.append("=======================\n");
         return stringBuilder.toString();
     }
+    //Gibt die Chatpartner eines Benutzers zurück
     public ArrayList<String> getChatPartnersForUser(String username) {
         ArrayList<String> chatPartners = new ArrayList<>();
         for (String key : storage.keySet()) {
@@ -191,6 +204,7 @@ public class MessageStorage implements Serializable{
         }
         return chatPartners;
     }
+    //TODO: Fehlerbehandlung
     public void join(MessageStorage otherStorage, String servername) {
         if(otherStorage != null){
             // Join the chat messages
@@ -232,6 +246,7 @@ public class MessageStorage implements Serializable{
         }
         return true;
     }
+    //Liest die Nachrichten aus einer Textdatei und gibt sie als MessageStorage zurück
     public static MessageStorage readFromTextFile(String serverName) {
         MessageStorage messageStorage = new MessageStorage();
         String os = System.getProperty("os.name").toLowerCase();
@@ -271,5 +286,3 @@ public class MessageStorage implements Serializable{
     }
 
 }
-
-// Empty message

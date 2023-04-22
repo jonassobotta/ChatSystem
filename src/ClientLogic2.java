@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.TreeMap;
-
+//Ähnlich zu clientLogic1 -> Es werden nicht alle Kommentare wiederholt
 public class ClientLogic2 extends Thread {
     private ArrayList<ConnectionInetPortList> partnerServerList;
     private BufferedReader reader;
@@ -93,7 +93,7 @@ public class ClientLogic2 extends Thread {
         this.messageStorage.addMessage(message, this.username);
         chatUI.initializeChatView();
     }
-
+//TODO: sollen wir das entfernen oder sagen dass das die Idee noch war
     public boolean getServers() throws IOException, ClassNotFoundException {
         //send message with userdata to random server and receive all chat history
         Message answer = sendMessageByObject(new Message(username, token, "WHERE_ARE_YOU"));
@@ -119,11 +119,8 @@ public class ClientLogic2 extends Thread {
     }
 
     public Message sendMessageByString(String messageText) throws IOException, ClassNotFoundException {
-        //was wenn server ausfällt -> wie oben anpassen ... ggf alle über sendmessag2
         Message message = new Message(username, token, receiver, messageText);
         return sendMessageByObject(message);
-
-
     }
 
     public Message sendMessageByObject(Message message) throws IOException, ClassNotFoundException {
@@ -159,6 +156,7 @@ public class ClientLogic2 extends Thread {
         int randomNumber = random.nextInt(3);
         return randomNumber;
     }
+    //Gibt zufällig eine der anderen beiden Zahlen aus
     public static int getInverse(int zahl) {
         // Erzeugung eines Zufallsgenerators
         Random random = new Random();

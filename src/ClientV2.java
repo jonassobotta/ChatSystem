@@ -5,7 +5,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 import java.util.TreeMap;
-
+//TODO: Client V2 veraltet?
 public class ClientV2 {
     public enum state {
         none,

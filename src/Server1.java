@@ -1,9 +1,11 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
-
+//Server für Aufgabe 1
+//Viele der Methoden sind in Threads ausgelagert, da bei Aufgabe 1 nicht gewartet werden muss
 public class Server1 extends Server {
     private ArrayList<ConnectionInetPortList> partnerServerList;
+    //Interrupt für Demo Zwecke
     public String interruptStatus = "";
 
     public static void main(String[] args) throws Exception {
@@ -71,7 +73,6 @@ public class Server1 extends Server {
                         if (user.validate(message.getSender(), message.getToken())) validUser = true;
                     }
                     if (validUser == true) {
-                        //ad user port to list
                         if (message.getReciver() != null && message.getReciver().equals(message.getSender())) {
                             //report error if sender and receiver are the same user
                             out.writeObject(new Message("FAILED"));
@@ -104,10 +105,11 @@ public class Server1 extends Server {
     }
 
     private void serverReconnection() {
-
+//Befüllt die Storage mit den Daten aus den Datein
         this.messageStorage = MessageStorage.readFromTextFile(this.serverName);
         this.userPortStorage = UserStorage.readFromTextFile(this.serverName);
-
+//Beide Server updaten sich gegenseitig
+//In einem Thread damit der Server nicht blockiert wird
         new Thread(() -> {
             Message answer;
             try {
@@ -122,43 +124,52 @@ public class Server1 extends Server {
             }
         }).start();
     }
-
+//Gewährleistset, dass die Benutzer sich von verschiedenen Geräten anmelden können
     private boolean assignListenPort(Message message, InetAddress inetAddress, Socket client) {
+        //Falls der User noch nicht in der Storage ist, wird ihm ein Port zugewiesen
         if (userPortStorage.containsUser(message.getSender()) == false && message.getSender().contains("Server") == false) {
             int assignedPort = generateUniqueRandomNumber();
             printOfServer("Assigned port: " + Integer.toString(assignedPort) + " to user " + message.getSender());
+            //TODO: warum nur hier der sync und nicht auch bei dem else if
             syncUserPortStorage(message.getSender(), inetAddress, assignedPort);
+        //Falls der User schon in der Storage ist, aber sich von einem anderen Gerät anmeldet, wird seine InetAddress geändert
         } else if (userPortStorage.containsUser(message.getSender()) && inetAddress.equals(userPortStorage.getUser(message.getSender()).getInetAddress()) == false) {
             userPortStorage.getUser(message.getSender()).setInetAddress(client.getInetAddress());
             printOfServer("Changed InetAddress from " + message.getSender() + " to " + client.getInetAddress());
         }
+        //Sonst muss nichts passieren
         return true;
     }
 
     public void handleClientCommands(String inputCommand, Message message, ObjectOutputStream out) throws IOException {
         printOfServer("input command: " + inputCommand);
         switch (inputCommand) {
+            //Client will message history beim anmelden
             case "GET":
                 MessageStorage relevantMsg = this.messageStorage.getChatsForUser(message.getSender());
                 printOfServer(userPortStorage.print());
                 out.writeObject(new Message(relevantMsg, "OK", this.userPortStorage.getUser(message.getSender()).getPort()));
                 printOfServer("sent message history of user " + message.getSender());
                 break;
+            //Client will message senden
             case "SEND":
                 this.messageStorage.addMessage(message, this.serverName);
                 syncServerMessageStorage(message);
                 sendMessageToReceiver(message);
                 out.writeObject(new Message("OK"));
                 break;
+            //TODO: warum adden wir da eine message
             case "SYNC_USER":
                 this.messageStorage.addMessage(message, this.serverName);
                 this.userPortStorage.addUser(message.getUsername(), message.getInetAddress(), message.getPort(), this.serverName);
                 printOfServer(this.userPortStorage.print());
                 break;
+            //Nachricht kommt vom anderen Server (da dieser ein SEND erhalten hat) und wird in den Storage geschrieben
             case "SYNC_MESSAGE":
                 this.messageStorage.addMessage(message.getMessage(), this.serverName);
                 printOfServer(this.messageStorage.print());
                 break;
+            //Bei einem Neustart eines Servers updaten sich beide Server gegenseitig
             case "REBOOT":
                 if(message.getMessageStorage() != null){
                     this.messageStorage.join(message.getMessageStorage(), this.serverName);
@@ -174,9 +185,7 @@ public class Server1 extends Server {
                 break;
         }
     }
-
-
-
+    //TODO: macht das hier überhaupt sinn? bzw. weiß selbst nicht mehr wie das genau umgesetzt wurde
     private void syncUserPortStorage(String sender, InetAddress inetAddress, int assignedPort) {
         userPortStorage.addUser(sender, inetAddress, assignedPort, this.serverName);
         new Thread(() -> {
@@ -187,11 +196,12 @@ public class Server1 extends Server {
             }
         }).start();
     }
-
+//Nachricht wird weitergeleitet
     private void sendMessageToReceiver(Message message) {
         new Thread(() -> {
             try {
                 UserStorage.Body user;
+                //Wenn der Empfänger sich bereits angemeldet hat, wird die Nachricht direkt an ihn weitergeleitet
                 if ((user = userPortStorage.getUser(message.getReciver())) != null) {
                     printOfServer("Try to forwarde Message from " + message.getSender() + " to " + message.getReciver() + " with address " + user.getInetAddress().toString().substring(1) + ":" + user.getPort());
 
@@ -206,7 +216,7 @@ public class Server1 extends Server {
             }
         }).start();
     }
-
+    //TODO: macht das hier überhaupt sinn? bzw. weiß selbst nicht mehr wie das genau umgesetzt wurde
     private void syncServerMessageStorage(Message message) {
         new Thread(() -> {
             try {
@@ -216,7 +226,8 @@ public class Server1 extends Server {
             }
         }).start();
     }
-
+//Get Connection ausgelagert
+//Probiert sich zweimal mit dem anderen Server zu verbinden
     public TCPConnection getConnection(int index) throws IOException {
         if (index == 2) throw new IOException();
         TCPConnection myConnection;

@@ -1,5 +1,6 @@
 import java.io.Serializable;
-
+//UniqueTimestamp damit es kein Fehler gibt wenn zwei Nutzer gleichzeitig Nachrichten senden
+//und die Nachrichten in der richtigen Reihenfolge angezeigt werden
 public class UniqueTimestamp implements Comparable<UniqueTimestamp>, Serializable {
     public String user;
     public long timestamp;

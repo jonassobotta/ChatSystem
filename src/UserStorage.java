@@ -4,10 +4,12 @@ import java.net.InetSocketAddress;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
-
+//Den UserStorage gibt es damit der Server weiß welche Adresse und welchen Port er für einen Nutzer verwenden soll
+//Dadurch können sich Nutzer von verschiedenen Geräten mit dem selben Benutzernamen anmelden
+//Besteht aus einem HashMap mit dem Benutzernamen als Key und der Body-Klasse als Value
 public class UserStorage implements Serializable {
     private Map<String, Body> map = new HashMap<>();
-
+//Wie beim Message Storage werden die Daten (hier Benutzer) auch in einer Textdatei gespeichert
     public void addUser(String username, InetAddress inetAddress, int port, String serverName) {
         Body body = new Body(inetAddress, port);
         map.put(username, body);
@@ -39,6 +41,10 @@ public class UserStorage implements Serializable {
             throw new RuntimeException(e);
         }
     }
+    //Wie beim Message Storage kann auch ein ganzer Storage in eine Textdatei geschrieben werden
+//Das wird benutzt um bei Aufgabe 1 die Nachrichten nach einem Neustart des anderen Servers in die Textdatei zu schreiben.
+//Die beiden Server sollen ja den gleichen Speicher haben und es kann sein,
+//dass in der Zwischenzeit etwas auf den anderen Server geschrieben wurde.
     public void writeToTextFile(String serverName) {
         String os = System.getProperty("os.name").toLowerCase();
         String trenner;
@@ -62,7 +68,7 @@ public class UserStorage implements Serializable {
         }
     }
 
-
+    //Body für einen Nutzer bekommen
     public Body getUser(String username) {
         if(map.get(username) != null){
             return map.get(username);
@@ -79,7 +85,7 @@ public class UserStorage implements Serializable {
         private InetAddress inetAddress;
         private int port;
         private long timestamp;
-
+//Body besteht aus der IP-Adresse, dem Port und einem Timestamp
         public Body(InetAddress inetAddress, int port) {
             this.inetAddress = inetAddress;
             this.port = port;
@@ -104,7 +110,7 @@ public class UserStorage implements Serializable {
         public void setPort(int port) {
             this.port = port;
         }
-
+        //TODO: für was hier equals und hashCode?
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -121,7 +127,7 @@ public class UserStorage implements Serializable {
             return result;
         }
     }
-
+//Gibt wie bei Message Storage den ganze Storage als String zurück
     public String print() {
         StringBuilder sb = new StringBuilder();
         sb.append(" \n === User Port Storage ===\n");
@@ -162,6 +168,7 @@ public class UserStorage implements Serializable {
         }
         writeToTextFile(servername);
     }
+    //Ebenfalls wie beim Message Storage kann ein Storage aus einer Textdatei gelesen werden
     public static UserStorage readFromTextFile(String serverName) {
         UserStorage userStorage = new UserStorage();
         String os = System.getProperty("os.name").toLowerCase();
@@ -196,7 +203,7 @@ public class UserStorage implements Serializable {
 
         return userStorage;
     }
-
+//TODO: für was hier equals und hashCode?, related problems
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

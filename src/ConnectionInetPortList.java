@@ -1,7 +1,7 @@
 public class ConnectionInetPortList {
     private int partnerPort;
     private String inetAddress;
-
+    //Verbindung mit einer IP-Adresse und einem Partnerport
     public ConnectionInetPortList(String inetAddress, int partnerPort) {
         this.partnerPort = partnerPort;
         this.inetAddress = inetAddress;
@@ -23,3 +23,4 @@ public class ConnectionInetPortList {
         this.inetAddress = inetAddress;
     }
 }
+

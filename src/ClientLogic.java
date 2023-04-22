@@ -57,10 +57,12 @@ public class ClientLogic extends Thread {
     public String getUsername() {
         return username;
     }
-
+//TODO: ist das nicht eher reader running?
+    //TODO: iwo das mit unseren timeouts erwähnen... vllt in doku
     public void run() {
         System.out.println("Writer running");
         try {
+            //Startet erst dann wenn ihm der Port vom Server zugewiesen wurde
             while (listenPort == 0) {
                 sleep(1);
             }
@@ -89,11 +91,12 @@ public class ClientLogic extends Thread {
 
     public void addMessageToHistory(Message message) {
         this.messageStorage.addMessage(message, this.username);
+        //UI aktuallisiert wenn neue message empfangen wird
         chatUI.initializeChatView();
     }
-
+//TODO: hier den index raus?
     public String checkUserData(int index) throws IOException, ClassNotFoundException {
-        //send message with userdata to random server and receive all chat history
+        //send message with userdata to random server and receive all chat history if userdata is correct
         Message answer = sendMessageByObejct(new Message(username, token, "GET"));
         if (answer.getStatus().equals("OK")) {
             //add history
@@ -104,13 +107,13 @@ public class ClientLogic extends Thread {
     }
 
     public Message sendMessageByString(String messageText) throws IOException, ClassNotFoundException {
-        //was wenn server ausfällt -> wie oben anpassen ... ggf alle über sendmessag2
         Message message = new Message(username, token, receiver, messageText);
         return sendMessageByObejct(message);
     }
 
     public Message sendMessageByObejct(Message message) throws IOException, ClassNotFoundException {
         TCPConnection socket = getConnection(0);
+        //Für Demo Zwecke
         if(message.getMessageText() != null){
             if(message.getMessageText().equals("INTERRUPT")){
                 System.out.println("interrupted by message \"INTERRUPT\"");
@@ -123,22 +126,23 @@ public class ClientLogic extends Thread {
             }
         }
         Message answer = socket.sendMessage(message).receiveAnswer();
+        //Wenn der User etwas schreibt wird es auch hinzu gefügt
         if (message.getStatus().equals("SEND")) {
             addMessageToHistory(message);
         }
         return answer;
     }
-
+//Damit Server random ausgewählt werden
     public static int randomNumber() {
         Random random = new Random();
         int randomNumber = random.nextInt(2);
         return randomNumber;
     }
-
+//Damit danach der andere Server ausgewählt wird
     public static int getInverse(int i) {
         return (i + 1) % 2;
     }
-
+//Probiert sich maximal zwei mal mit den Servern zu verbinden
     public TCPConnection getConnection(int index) throws IOException {
         if (index == 2) throw new IOException();
         TCPConnection myConnection;
@@ -155,7 +159,7 @@ public class ClientLogic extends Thread {
             }
         }
     }
-
+//Passwort wird nicht im Klartext verschickt
     public static String generateToken(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA3-256");
@@ -170,6 +174,7 @@ public class ClientLogic extends Thread {
             return null;
         }
     }
+    //Primahlberchnung für delay
     public static void sieveOfEratosthenes(int limit) {
         boolean[] prime = new boolean[limit + 1];
         for(int i = 0; i < limit; i++) {

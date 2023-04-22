@@ -1,7 +1,7 @@
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
+//Für gute Steuerung der Server
 public class ServerController1 {
     public static void main(String[] args) {
         Server1 server1 = new Server1("Server1");
