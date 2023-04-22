@@ -21,9 +21,9 @@ public class Server2 extends Server {
 
         //setup all partner server
         this.partnerServerList = new ArrayList<>();
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 7777));
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 8888));
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 9999));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 9999));
 
         //save used ports by servers
         this.usedPorts = new HashSet<>();
@@ -172,7 +172,7 @@ public class Server2 extends Server {
     }
     private boolean syncUserInetAdress(String sender, InetAddress inetAddress, int assignedPort) {
         try {
-            TCPConnection connection = getConnection(0);
+            TCPConnection connection = getConnection();
             connection.sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort));
             userPortStorage.getUser(sender).setInetAddress(inetAddress);
             printOfServer("User Data synced: InetAddress from " + sender + " to " + inetAddress);
@@ -253,7 +253,7 @@ public class Server2 extends Server {
 //liest nachrichten von einem anderen server
     private boolean getMessageStorrageFromOtherServer() {
         try {
-            TCPConnection connection = getConnection(0);
+            TCPConnection connection = getConnection();
             Message answer;
             answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "SYNC_MESSAGE_STORAGE")).receiveAnswer();
             this.messageStorage.join(answer.getMessageStorage(), this.serverName);
@@ -262,10 +262,10 @@ public class Server2 extends Server {
             return false;
         }
     }
-//TODO: hier ist das mit schreiben anstatt lesen (aber blicke es selbst nicht mehr ganz)
+
     private boolean syncUserPortStorage(String sender, InetAddress inetAddress, int assignedPort) {
         Message answer;
-        TCPConnection connection = getConnection(0);
+        TCPConnection connection = getConnection();
         if (connection != null) {
             try {
                 answer = connection.sendMessage(new Message(this.serverName, serverToken, "Server", sender, inetAddress, assignedPort)).receiveAnswer(); // status: "SYNC_USER"
@@ -285,11 +285,11 @@ public class Server2 extends Server {
         }
         return false;
     }
-
+    //Hier muss auch noch ein weiterer Server erreichbar sein, da der useport storage vor dem weiterleiten gelesen wird
     private void sendMessageToReceiver(Message message) {
         new Thread(() -> {
             try {
-                TCPConnection connection = getConnection(0);
+                TCPConnection connection = getConnection();
                 if (connection != null) {
                     Message answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "READ_USER")).receiveAnswer();
                     connection.closeConnection();
@@ -311,7 +311,7 @@ public class Server2 extends Server {
     }
 
     private boolean syncServerMessageStorage(Message message) {
-        TCPConnection connection = getConnection(0);
+        TCPConnection connection = getConnection();
         if (connection == null) {
             return false;
         } else {
@@ -324,8 +324,7 @@ public class Server2 extends Server {
         return true;
     }
 
-    public TCPConnection getConnection(int index){
-        if (index == 2) return null;
+    public TCPConnection getConnection(){
         TCPConnection myConnection;
         int first = randomNumber();
         try {
@@ -336,7 +335,7 @@ public class Server2 extends Server {
                 myConnection = new TCPConnection(partnerServerList.get(getInverse(first)).getInetAddress(), partnerServerList.get(getInverse(first)).getPartnerPort());
                 return myConnection;
             } catch (Exception e2) {
-                return getConnection(index + 1);
+                return null;
             }
         }
     }

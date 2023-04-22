@@ -22,9 +22,9 @@ public class ClientLogic2 extends Thread {
 
     public ClientLogic2(ChatUI2 chatUI) {
         this.partnerServerList = new ArrayList<>();
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 7777));
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 8888));
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 9999));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 9999));
         try {
             this.chatUI = chatUI;
             this.reader = new BufferedReader(new InputStreamReader(System.in));

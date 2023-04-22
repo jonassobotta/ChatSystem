@@ -5,6 +5,7 @@ import java.util.*;
 //Viele der Methoden sind in Threads ausgelagert, da bei Aufgabe 1 nicht gewartet werden muss
 public class Server1 extends Server {
     private ArrayList<ConnectionInetPortList> partnerServerList;
+    private ArrayList<String> userGetLog = new ArrayList<>();
     //Interrupt für Demo Zwecke
     public String interruptStatus = "";
 
@@ -19,8 +20,8 @@ public class Server1 extends Server {
 
         //setup all partner server
         this.partnerServerList = new ArrayList<>();
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 7777));
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.71", 8888));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
 
         //save used ports by servers
         this.usedPorts = new HashSet<>();
@@ -150,6 +151,7 @@ public class Server1 extends Server {
                 printOfServer(userPortStorage.print());
                 out.writeObject(new Message(relevantMsg, "OK", this.userPortStorage.getUser(message.getSender()).getPort()));
                 printOfServer("sent message history of user " + message.getSender());
+                userGetLog.add(message.getSender());
                 break;
             //Client will message senden
             case "SEND":
@@ -166,6 +168,11 @@ public class Server1 extends Server {
             case "SYNC_MESSAGE":
                 this.messageStorage.addMessage(message.getMessage(), this.serverName);
                 printOfServer(this.messageStorage.print());
+                //wenn vorher get befehl für user m und nachricht an user m, dann nochmal forworden
+                if(userGetLog.contains(message.getReciver())){
+                   userGetLog.remove(message.getReciver());
+                   sendMessageToReceiver(message);
+                }
                 break;
             //Bei einem Neustart eines Servers updaten sich beide Server gegenseitig
             case "REBOOT":
@@ -183,11 +190,12 @@ public class Server1 extends Server {
                 break;
         }
     }
+
     private void syncUserPortStorage(String sender, InetAddress inetAddress, int assignedPort) {
         userPortStorage.addUser(sender, inetAddress, assignedPort, this.serverName);
         new Thread(() -> {
             try {
-                getConnection(0).sendMessage(new Message(serverName, serverToken, "Server", sender, inetAddress, assignedPort)).closeConnection();
+                getConnection().sendMessage(new Message(serverName, serverToken, "Server", sender, inetAddress, assignedPort)).closeConnection();
             } catch (IOException e) {
                 System.out.println("Sync failed");
             }
@@ -216,7 +224,7 @@ public class Server1 extends Server {
     private void syncServerMessageStorage(Message message) {
         new Thread(() -> {
             try {
-                getConnection(0).sendMessage(new Message(serverName, serverToken, "Server", message)).closeConnection();
+                getConnection().sendMessage(new Message(serverName, serverToken, "Server", message)).closeConnection();
             } catch (Exception e) {
                 printOfServer("message storage sync error: " + e.getMessage());
             }
@@ -224,14 +232,13 @@ public class Server1 extends Server {
     }
 //Get Connection ausgelagert
 //Probiert sich zweimal mit dem anderen Server zu verbinden
-    public TCPConnection getConnection(int index) throws IOException {
-        if (index == 2) throw new IOException();
+    public TCPConnection getConnection() throws IOException {
         TCPConnection myConnection;
         try {
             myConnection = new TCPConnection(partnerServerList.get(0).getInetAddress(), partnerServerList.get(0).getPartnerPort());
             return myConnection;
         } catch (Exception e) {
-            return getConnection(index + 1);
+            throw new IOException();
         }
     }
 }

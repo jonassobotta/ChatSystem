@@ -267,5 +267,6 @@ public class ChatUI2 extends JFrame {
 
     public static void main(String[] args) {
         new ChatUI2();
+        new ChatUI2();
     }
 }

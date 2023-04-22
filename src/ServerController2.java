@@ -7,6 +7,11 @@ import java.util.ArrayList;
 public class ServerController2 {
     public static void main(String[] args) {
         ArrayList<Server2> serverList = new ArrayList<>();
+        ArrayList<String> serverName = new ArrayList<>();
+        serverName.add("Server1");
+        serverName.add("Server2");
+        serverName.add("Server3");
+
         serverList.add( new Server2("Server1","START"));
         serverList.add( new Server2("Server2","START"));
         serverList.add( new Server2("Server3","START"));
@@ -20,10 +25,12 @@ public class ServerController2 {
 
                 if(tokens[0].equals("start") && tokens[1].equals("all")){
                     for (int i = 0; i < 3; i++){
+                        serverList.set(i, new Server2(serverName.get(i), "Start"));
                         serverList.get(i).start();
                     }
                 } else if (tokens[0].equals("stop") && tokens[1].equals("all")) {
                     for (int i = 0; i < 3; i++){
+                        serverList.get(i).serverSocket.close();
                         serverList.get(i).stopServer();
                     }
                 }
