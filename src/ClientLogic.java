@@ -115,7 +115,8 @@ public class ClientLogic extends Thread {
         try{
             socket = getConnection(0);
         }catch(Exception e){
-            System.out.println();
+            System.out.println("Could not connect to any server");
+            return new Message("FAILED");
         }
         //Für Demo Zwecke
         if(message.getMessageText() != null){
