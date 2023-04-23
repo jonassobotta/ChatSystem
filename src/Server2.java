@@ -22,7 +22,7 @@ public class Server2 extends Server {
         //setup all partner server
         this.partnerServerList = new ArrayList<>();
         this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 7777));
-        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.81", 8888));
+        this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 8888));
         this.partnerServerList.add(new ConnectionInetPortList("192.168.178.29", 9999));
 
         //save used ports by servers
@@ -130,7 +130,6 @@ public class Server2 extends Server {
 
         this.messageStorage = MessageStorage.readFromTextFile(this.serverName);
         this.userPortStorage = UserStorage.readFromTextFile(this.serverName);
-//TODO: Hier in der Doku schreiben dass wir es früher mit join gemacht haben und ganz ohne text datein ... bei mcs dann beiden anderen server nötig
         /*try {
             TCPConnection server1 = new TCPConnection(partnerServerList.get(0).getInetAddress(), partnerServerList.get(0).getPartnerPort());
             TCPConnection server2 = new TCPConnection(partnerServerList.get(1).getInetAddress(), partnerServerList.get(1).getPartnerPort());
@@ -152,16 +151,24 @@ public class Server2 extends Server {
             printOfServer("Server Error, please contact system admin");
         }*/
     }
-//TODO: Irgendwo hatten wir noch dass wegen unseren wechselden ports ein befehl als schreiben gilt obwohl es eigentlich lesen ist ... vllt auch bei aufgabe 1?
+//Bei MCS wird eigentlich immer von zwei Servern gelesen (bei uns auch User Daten)
+//Wenn diese bereits aber bei uns drin stehen, sind die Daten die man zu dem Nutzer aus dem zweiten Server bekommt gleich
+//Deshalb wird dann nicht extra eine Nachricht an ihn geschickt
+//Das passiert nur, wenn die Daten bei uns veraltet sind, was man daran sieht, dass die InetAdresse sich geändert hat
+//Der Port der Nutzer ändert sich nicht, sondern nur die InetAddress
     private boolean assignListenPort(Message message, InetAddress inetAddress, Socket client) {
+        //Wenn der Nutzer bei uns nicht vorhanden ist
         if (userPortStorage.containsUser(message.getSender()) == false && message.getSender().contains("Server") == false) {
             int assignedPort = generateUniqueRandomNumber();
+            //Wenn ein anderer Server erreichbar ist, synce UserPortStorage
             if (syncUserPortStorage(message.getSender(), inetAddress, assignedPort)) {
                 return true;
             } else {
                 return false;
             }
+        //Wenn sich die Inet Address geändert hat
         } else if (userPortStorage.containsUser(message.getSender()) && inetAddress.equals(userPortStorage.getUser(message.getSender()).getInetAddress()) == false && message.getSender().contains("Server") == false) {
+            //Wenn ein Server erreichbar ist, synce InetAddress
             if (syncUserInetAdress(message.getSender(), inetAddress, userPortStorage.getUser(message.getSender()).getPort())) {
                 return true;
             } else {
@@ -170,6 +177,7 @@ public class Server2 extends Server {
         }
         return true;
     }
+    //Synct die InetAddress
     private boolean syncUserInetAdress(String sender, InetAddress inetAddress, int assignedPort) {
         try {
             TCPConnection connection = getConnection();
@@ -189,8 +197,9 @@ public class Server2 extends Server {
             //In den If abfragen wird überprüft ob ein anderer Server erreichbar ist, wenn nicht wird dem Nutzer
             //ein Fehler ausgegeben
             case "GET":
-                if (getMessageStorrageFromOtherServer()) {
-                    MessageStorage relevantMsg = this.messageStorage.getChatsForUser(message.getSender());
+                MessageStorage buffer;
+                if ((buffer = getMessageStorrageFromOtherServer()) != null) {
+                    MessageStorage relevantMsg = buffer.getChatsForUser(message.getSender());
                     out.writeObject(new Message(relevantMsg, "OK", this.userPortStorage.getUser(message.getSender()).getPort()));
                     printOfServer(this.messageStorage.print());
                     printOfServer("sent message history of user " + message.getSender());
@@ -240,10 +249,10 @@ public class Server2 extends Server {
                 out.writeObject(new Message(this.userPortStorage));
                 printOfServer("sent user port storage to " + message.getSender());
                 break;
-            case "REBOOT":
+            /*case "REBOOT":
                 out.writeObject(new Message(this.serverName, this.serverToken, "OK", this.messageStorage, this.userPortStorage));
                 printOfServer("sent all storage content to " + message.getSender());
-                break;
+                break;*/
             default:
                 out.writeObject(new Message("FAILED"));
                 printOfServer("not able to handle command from " + message.getSender());
@@ -251,15 +260,14 @@ public class Server2 extends Server {
         }
     }
 //liest nachrichten von einem anderen server
-    private boolean getMessageStorrageFromOtherServer() {
+    private MessageStorage getMessageStorrageFromOtherServer() {
         try {
             TCPConnection connection = getConnection();
             Message answer;
             answer = connection.sendMessage(new Message(this.serverName, this.serverToken, "SYNC_MESSAGE_STORAGE")).receiveAnswer();
-            this.messageStorage.join(answer.getMessageStorage(), this.serverName);
-            return true;
+            return new MessageStorage().join(messageStorage, this.serverName).join(answer.getMessageStorage(), this.serverName);
         } catch (Exception e) {
-            return false;
+            return null;
         }
     }
 

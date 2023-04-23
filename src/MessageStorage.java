@@ -60,7 +60,7 @@ public class MessageStorage implements Serializable{
 //Die beiden Server sollen ja den gleichen Speicher haben und es kann sein,
 //dass in der Zwischenzeit etwas auf den anderen Server geschrieben wurde.
 //Die Textdatei ist so strukturiert, dass sie leicht gelesen werden kann.
-    public void writeToFile(String serverName) {
+    private void writeToFile(String serverName) {
         String os = System.getProperty("os.name").toLowerCase();
         String trenner;
 
@@ -205,7 +205,7 @@ public class MessageStorage implements Serializable{
         return chatPartners;
     }
     //joint zwei storages, durch die map sind dopplungen nicht möglich
-    public void join(MessageStorage otherStorage, String servername) {
+    public MessageStorage join(MessageStorage otherStorage, String servername) {
         if(otherStorage != null){
             // Join the chat messages
             for (Map.Entry<String, Chat> entry : otherStorage.storage.entrySet()) {
@@ -228,6 +228,7 @@ public class MessageStorage implements Serializable{
             }
             writeToFile(servername);
         }
+        return this;
     }
     @Override
     public boolean equals(Object obj) {
