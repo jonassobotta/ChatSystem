@@ -1,6 +1,0 @@
-luca;joel;1682206041029;moin
-joel;luca;1682206084644;hihi
-joel;luca;1682206253889;hi
-luca;joel;1682206265188;gfdsdfg
-luca;joel;1682206734746;hallo
-luca;joel;1682206740025;clientDelaySecondTry

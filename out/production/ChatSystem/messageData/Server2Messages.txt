@@ -1,5 +1,5 @@
-luca;joel;1682206041029;moin
-luca;joel;1682206069092;wie gehts
-joel;luca;1682206084644;hihi
-joel;luca;1682206137216;jo
-joel;luca;1682206155899;moin
+luca;joel;1682242382037;hi joel
+joel;luca;1682242437097;hi luca, ich bin jetzt online
+sarah;luca;1682242474245;hi luca hier ist sarah
+luca;sarah;1682242487711;hi
+joel;luca;1682242598931;hi ich bin an der anderen ui
