@@ -84,7 +84,6 @@ public class ChatUI2 extends JFrame {
                 } catch (Exception ex) {
                     System.out.println(ex.getMessage());
                 }
-                clientLogic.stop();
                 clientLogic = new ClientLogic2(ownInstance);
                 clientLogic.start();
                 CardLayout cl = (CardLayout) panelCards.getLayout();
@@ -266,6 +265,7 @@ public class ChatUI2 extends JFrame {
     }
 
     public static void main(String[] args) {
+        new ChatUI2();
         new ChatUI2();
         new ChatUI2();
     }

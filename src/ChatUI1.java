@@ -274,7 +274,5 @@ public class ChatUI1 extends JFrame {
 
     public static void main(String[] args) {
         new ChatUI1();
-        new ChatUI1();
-        new ChatUI1();
     }
 }
